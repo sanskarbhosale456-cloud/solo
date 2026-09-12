@@ -120,10 +120,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Logo */}
         <div className="px-6 py-6 border-b border-blue-500/30 relative shadow-[0_5px_15px_rgba(59,130,246,0.1)]">
-          <div className="font-display text-base text-glow-sky tracking-[0.3em] uppercase drop-shadow-[0_0_8px_#38bdf8]">
-            THE SYSTEM
-          </div>
-          <div className="font-body text-xs text-blue-200/40 mt-1 uppercase tracking-widest">Hunter Interface v2.0</div>
+          {/* Logo removed by user request */}
         </div>
 
         {/* Nav links */}
@@ -175,7 +172,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-glow/10 bg-void-surface">
-          <span className="font-display text-sm text-glow-sky tracking-widest">THE SYSTEM</span>
+          <span className="font-display text-sm text-glow-sky tracking-widest"></span>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}

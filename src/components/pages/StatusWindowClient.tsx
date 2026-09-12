@@ -135,12 +135,8 @@ export function StatusWindowClient() {
                   <span className="text-white font-body text-xl tracking-wider text-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{profile.username || 'PLAYER'}</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-cyan-500/20 pb-2 group-hover:border-cyan-400/50 transition-colors">
-                  <span className="text-cyan-500/70 font-display tracking-widest text-xs uppercase font-bold">Job</span>
+                  <span className="text-cyan-500/70 font-display tracking-widest text-xs uppercase font-bold">Ability</span>
                   <span className="text-white font-body text-lg tracking-wider opacity-40">None</span>
-                </div>
-                <div className="flex justify-between items-end border-b border-cyan-500/20 pb-2 group-hover:border-cyan-400/50 transition-colors">
-                  <span className="text-cyan-500/70 font-display tracking-widest text-xs uppercase font-bold">Title</span>
-                  <span className="text-white font-body text-lg tracking-wider">{profile.title || 'None'}</span>
                 </div>
               </div>
 
@@ -211,7 +207,7 @@ export function StatusWindowClient() {
               {/* Rank Progression Roadmap */}
               <div className="space-y-6">
                 <div className="text-cyan-500/70 font-display tracking-[0.2em] text-[10px] uppercase font-bold border-b border-cyan-500/20 pb-2">
-                  Hunter Evaluation Rank
+                  Current Rank
                 </div>
                 <div className="flex justify-between items-center relative px-2 pt-2">
                   <motion.div 
@@ -275,8 +271,7 @@ export function StatusWindowClient() {
                   })}
                 </div>
                 <div className="mt-8 pt-4 border-t border-cyan-500/20 flex justify-between text-cyan-500/50 font-display text-[9px] tracking-[0.2em] uppercase font-bold relative z-10">
-                  <span>Available Points: 0</span>
-                  <span className="animate-pulse text-cyan-400/80">Distribute Manually</span>
+                  {/* Text removed by user request */}
                 </div>
               </div>
 
