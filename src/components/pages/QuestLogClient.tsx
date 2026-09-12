@@ -229,6 +229,19 @@ export function QuestLogClient() {
         </button>
       </div>
 
+      {/* SYSTEM PENALTY WARNING BANNER */}
+      <div className="mt-8 mb-4 flex justify-center">
+        <div className="relative border border-red-500/40 bg-red-950/20 backdrop-blur-sm px-6 py-2.5 shadow-[0_0_20px_rgba(239,68,68,0.15)] max-w-2xl text-center">
+          <span className="absolute -top-1 -left-1 w-2 h-2 border-t border-l border-red-400" />
+          <span className="absolute -top-1 -right-1 w-2 h-2 border-t border-r border-red-400" />
+          <span className="absolute -bottom-1 -left-1 w-2 h-2 border-b border-l border-red-400" />
+          <span className="absolute -bottom-1 -right-1 w-2 h-2 border-b border-r border-red-400" />
+          <p className="text-red-400/90 font-display text-[11px] md:text-xs tracking-[0.2em] uppercase drop-shadow-[0_0_6px_rgba(239,68,68,0.6)]">
+            * WARNING: FAILURE TO COMPLETE OBJECTIVES MAY RESULT IN A PENALTY.
+          </p>
+        </div>
+      </div>
+
       {/* DEDICATED ASSIGN QUEST MODAL */}
       <AnimatePresence>
         {modalOpen && (
@@ -263,11 +276,8 @@ export function QuestLogClient() {
 
                 {/* MODAL HEADER */}
                 <div className="relative flex justify-between items-center pb-4 mb-6 border-b border-blue-500/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full border-2 border-blue-400 flex items-center justify-center bg-[#030914] shadow-[0_0_10px_#3b82f6]">
-                      <span className="text-blue-100 font-bold text-sm drop-shadow-[0_0_8px_#60a5fa]">!</span>
-                    </div>
-                    <h2 className="text-blue-50 font-display tracking-[0.25em] text-lg uppercase drop-shadow-[0_0_10px_#60a5fa]">
+                  <div className="border border-blue-400/40 px-5 py-1.5 shadow-[inset_0_0_15px_rgba(59,130,246,0.2)] bg-blue-900/10">
+                    <h2 className="text-blue-50 font-display tracking-[0.25em] text-base md:text-lg uppercase drop-shadow-[0_0_10px_#60a5fa]">
                       Assign Quest
                     </h2>
                   </div>
@@ -458,12 +468,9 @@ function QuestWindow({
         <div className="absolute inset-2 border border-blue-400/20 pointer-events-none" />
 
         <div>
-          {/* HEADER SECTION (Circular '!' badge + Framed Title Box) */}
-          <div className="relative flex justify-center items-center gap-4 mb-8 pb-6 border-b border-blue-500/30">
-            <div className="w-10 h-10 rounded-full border-[2.5px] border-blue-400 flex items-center justify-center bg-[#030914] shadow-[0_0_15px_#3b82f6]">
-              <span className="text-blue-100 font-bold text-xl drop-shadow-[0_0_10px_#60a5fa]">!</span>
-            </div>
-            <div className="border border-blue-400/40 px-6 py-2 shadow-[inset_0_0_15px_rgba(59,130,246,0.2)] bg-blue-900/10">
+          {/* HEADER SECTION (Framed Title Box) */}
+          <div className="relative flex justify-center items-center mb-8 pb-6 border-b border-blue-500/30">
+            <div className="border border-blue-400/40 px-8 py-2 shadow-[inset_0_0_15px_rgba(59,130,246,0.2)] bg-blue-900/10">
               <h2 className="text-blue-50 font-display tracking-[0.25em] text-lg drop-shadow-[0_0_12px_#60a5fa] uppercase">
                 {title}
               </h2>
@@ -489,13 +496,6 @@ function QuestWindow({
               </div>
             )}
           </div>
-        </div>
-
-        {/* FOOTER WARNING MESSAGE */}
-        <div className="relative z-10 mt-8 pt-4 border-t border-blue-500/20 text-center">
-          <p className="text-red-500/80 font-display text-[10px] tracking-widest uppercase drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">
-            * WARNING: FAILURE TO COMPLETE OBJECTIVES MAY RESULT IN A PENALTY.
-          </p>
         </div>
       </div>
 
