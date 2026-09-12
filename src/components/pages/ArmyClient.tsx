@@ -2,6 +2,7 @@
 
 import { useProfile } from '@/hooks/useProfile'
 import { SHADOW_SOLDIERS } from '@/lib/progression/engine'
+import { motion } from 'framer-motion'
 
 const SOLDIER_COLORS = [
   '#9CA3AF','#6EE7B7','#93C5FD','#C084FC','#FCD34D',
@@ -27,11 +28,16 @@ export function ArmyClient() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-start justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: -15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-start justify-between"
+      >
         <div>
           <h1 className="font-display text-2xl text-white tracking-wider uppercase mb-1">PLAYER COLLECTION</h1>
         </div>
-      </div>
+      </motion.div>
 
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" aria-busy="true">
@@ -56,10 +62,14 @@ export function ArmyClient() {
                 const color = SOLDIER_COLORS[idx % SOLDIER_COLORS.length]
 
                 return (
-                  <li
+                  <motion.li
                     key={soldier.key}
-                    className={`panel p-4 flex flex-col items-center text-center transition-all duration-300 ${
-                      unlocked ? 'panel-hover' : 'opacity-40'
+                    initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.03 }}
+                    whileHover={{ y: -6, scale: 1.03, transition: { duration: 0.2 } }}
+                    className={`panel p-4 flex flex-col items-center text-center transition-colors ${
+                      unlocked ? 'border-glow/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'opacity-40'
                     }`}
                     aria-label={unlocked ? `${soldier.name} — Collected` : `Locked item — unlock at ${soldier.unlockAt} quests`}
                   >
@@ -121,7 +131,7 @@ export function ArmyClient() {
                         Complete {soldier.unlockAt} quest{soldier.unlockAt !== 1 ? 's' : ''}
                       </p>
                     )}
-                  </li>
+                  </motion.li>
                 )
               })}
             </ul>
