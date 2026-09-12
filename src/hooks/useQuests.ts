@@ -13,7 +13,6 @@ import {
   demoCompleteQuest,
   DEMO_SOLDIERS,
 } from '@/lib/demo/demoMode'
-import { calcXpToNext } from '@/lib/progression/engine'
 
 // ---------------------------------------------------------------
 // Fetch hooks
@@ -59,18 +58,22 @@ export function useCreateQuest() {
       if (isDemoMode()) {
         const xpMap: Record<string, number> = { E: 50, D: 80, C: 180, B: 340, A: 600, S: 1000 }
         const goldMap: Record<string, number> = { E: 25, D: 40, C: 90, B: 170, A: 300, S: 500 }
+        const assignedType = input.type ?? (input.quest_type === 'daily' ? 'daily' : 'weekly')
         const newQuest: Quest = {
           id: `demo-${Date.now()}`,
           user_id: 'demo-user',
           title: input.title,
           description: input.description ?? null,
-          type: input.type ?? 'side',
-          discipline: input.discipline ?? 'intellect',
-          difficulty: input.difficulty ?? 'E',
-          xp_reward: xpMap[input.difficulty ?? 'E'],
-          gold_reward: goldMap[input.difficulty ?? 'E'],
+          type: assignedType,
+          quest_type: assignedType === 'daily' ? 'daily' : 'quest',
+          discipline: input.discipline ?? 'strength',
+          stat_tags: input.stat_tags && input.stat_tags.length > 0 ? input.stat_tags : [(input.discipline ?? 'strength').toUpperCase()],
+          difficulty: input.difficulty ?? 'C',
+          xp_reward: xpMap[input.difficulty ?? 'C'] ?? 100,
+          gold_reward: goldMap[input.difficulty ?? 'C'] ?? 50,
           status: 'active',
           due_date: input.due_date ?? null,
+          sort_order: 0,
           created_at: new Date().toISOString(),
           completed_at: null,
         }
@@ -148,7 +151,7 @@ export function useCompleteQuest() {
           new_soldiers: result.newSoldiers,
           new_xp: result.newProfile.xp,
           new_gold: result.newProfile.gold,
-        } as CompleteQuestResult
+        } as unknown as CompleteQuestResult
       }
 
       const res = await fetch(`/api/quests/${questId}/complete`, {
@@ -229,21 +232,27 @@ export function useDeleteQuest() {
 
   return useMutation({
     mutationFn: async (questId: string) => {
+      if (isDemoMode()) {
+        const quests = getDemoQuests()
+        saveDemoQuests(quests.filter((q) => q.id !== questId))
+        return
+      }
       const res = await fetch(`/api/quests/${questId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete quest')
     },
     onMutate: async (questId) => {
       await queryClient.cancelQueries({ queryKey: ['quests'] })
-      const previousQuests = queryClient.getQueryData<Quest[]>(['quests', 'active'])
-      queryClient.setQueryData<Quest[]>(['quests', 'active'], (old) =>
-        old?.filter((q) => q.id !== questId) ?? []
-      )
+      const previousQuests = queryClient.getQueryData<Quest[]>(['quests'])
+      queryClient.setQueriesData({ queryKey: ['quests'] }, (old: any) => {
+        if (Array.isArray(old)) {
+          return old.filter((q) => q.id !== questId)
+        }
+        return old
+      })
       return { previousQuests }
     },
     onError: (err, vars, ctx) => {
-      if (ctx?.previousQuests) {
-        queryClient.setQueryData(['quests', 'active'], ctx.previousQuests)
-      }
+      queryClient.invalidateQueries({ queryKey: ['quests'] })
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['quests'] })

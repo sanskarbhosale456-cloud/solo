@@ -36,8 +36,10 @@ export interface Quest {
   title: string
   description: string | null
   discipline: Discipline
+  stat_tags?: string[]
   difficulty: Difficulty
   quest_type: QuestType
+  type?: string
   xp_reward: number
   gold_reward: number
   status: QuestStatus
@@ -108,9 +110,11 @@ export interface ApiError {
 export interface CreateQuestInput {
   title: string
   description?: string
-  discipline: Discipline
-  difficulty: Difficulty
-  quest_type: QuestType
+  discipline?: Discipline
+  stat_tags?: string[]
+  difficulty?: Difficulty
+  quest_type?: QuestType
+  type?: string
   due_date?: string
 }
 
