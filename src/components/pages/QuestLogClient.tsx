@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuests, useCreateQuest, useCompleteQuest, useDeleteQuest } from '@/hooks/useQuests'
 import { getAudioManager } from '@/lib/audio/AudioManager'
-import { isDemoMode, getDemoQuests, saveDemoQuests } from '@/lib/demo/demoMode'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Quest, Discipline } from '@/types'
 
@@ -69,7 +68,11 @@ export function QuestLogClient() {
   const [systemWarning, setSystemWarning] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const questsQuery = useQuests('all')
+  // Completion toast: { xp, gold, tags }
+  const [completionToast, setCompletionToast] = useState<{ xp: number; gold: number; tags: string[] } | null>(null)
+
+  // Only show ACTIVE quests — completed ones disappear
+  const questsQuery = useQuests('active')
   const createQuest = useCreateQuest()
   const completeQuest = useCompleteQuest()
   const deleteQuest = useDeleteQuest()
@@ -89,20 +92,29 @@ export function QuestLogClient() {
 
   async function handleToggleStatus(quest: Quest) {
     if (quest.status === 'completed') {
-      // Toggle back to incomplete/active
-      if (isDemoMode()) {
-        const quests = getDemoQuests()
-        const updated = quests.map((q) =>
-          q.id === quest.id ? { ...q, status: 'active' as const, completed_at: null } : q
-        )
-        saveDemoQuests(updated)
-        queryClient.invalidateQueries({ queryKey: ['quests'] })
-        getAudioManager().playSFX('click')
-      }
-    } else {
-      // Complete quest
-      getAudioManager().playSFX('complete')
+      // Already completed — do nothing (quest should have disappeared)
+      return
+    }
+    // Complete quest: show reward toast then remove
+    getAudioManager().playSFX('complete')
+
+    // Capture stat tags before completing
+    const tags = getQuestTags(quest)
+
+    try {
       await completeQuest.mutateAsync(quest.id)
+
+      // Show the completion reward toast
+      setCompletionToast({
+        xp: quest.xp_reward,
+        gold: quest.gold_reward,
+        tags,
+      })
+
+      // Auto-hide toast after 3 seconds
+      setTimeout(() => setCompletionToast(null), 3000)
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -185,7 +197,48 @@ export function QuestLogClient() {
 
   return (
     <div className="w-full max-w-7xl mx-auto my-6 px-3 md:px-6" style={{ perspective: '1200px' }}>
-      
+
+      {/* QUEST COMPLETE TOAST */}
+      <AnimatePresence>
+        {completionToast && (
+          <motion.div
+            key="completion-toast"
+            initial={{ opacity: 0, y: -40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] max-w-[90vw]"
+          >
+            <div className="relative bg-gradient-to-b from-blue-950/95 to-black/95 border-2 border-blue-400 shadow-[0_0_40px_rgba(59,130,246,0.55)] backdrop-blur-md px-8 py-5 text-center">
+              <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-blue-200" />
+              <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-blue-200" />
+              <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-blue-200" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-blue-200" />
+              <p className="font-display tracking-[0.35em] text-blue-100 text-xs uppercase mb-1 drop-shadow-[0_0_8px_#60a5fa]">
+                — Quest Cleared —
+              </p>
+              <div className="flex items-center justify-center gap-4 mt-2 flex-wrap">
+                <span className="font-display text-yellow-300 text-sm tracking-widest drop-shadow-[0_0_6px_#fbbf24]">
+                  +{completionToast.xp} XP
+                </span>
+                <span className="text-blue-400/60 text-xs">·</span>
+                <span className="font-display text-amber-400 text-sm tracking-widest drop-shadow-[0_0_6px_#f59e0b]">
+                  +{completionToast.gold} Gold
+                </span>
+                {completionToast.tags.map((tag) => {
+                  const style = STAT_TAG_STYLES[tag as StatTag] ?? STAT_TAG_STYLES.STRENGTH
+                  return (
+                    <span key={tag} className={`text-[10px] font-display tracking-widest uppercase border px-2 py-0.5 ${style.border} ${style.text} ${style.bg}`}>
+                      +1 {tag}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* TWO SEPARATE WINDOWS: DAILY & WEEKLY */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* WINDOW 1: DAILY QUEST */}
@@ -220,7 +273,6 @@ export function QuestLogClient() {
           <span className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-blue-200" />
           
           <span className="relative z-10 flex items-center gap-3 drop-shadow-[0_0_8px_#60a5fa]">
-            <span className="text-xl leading-none font-bold text-blue-300 group-hover:scale-125 transition-transform">+</span>
             [ Assign Quest ]
           </span>
 
@@ -304,7 +356,7 @@ export function QuestLogClient() {
                         setDescription(e.target.value)
                         setSystemWarning(null)
                       }}
-                      placeholder="Enter quest parameters... (add /s for S-Rank)"
+                      placeholder="Enter Quest"
                       autoFocus
                       className="w-full bg-blue-950/20 border border-blue-500/40 focus:border-blue-300 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] outline-none text-blue-50 font-body px-4 py-3 placeholder:text-blue-400/30 transition-all text-sm md:text-base"
                     />

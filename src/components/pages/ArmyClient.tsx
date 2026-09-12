@@ -29,15 +29,8 @@ export function ArmyClient() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-start justify-between">
         <div>
-          <div className="font-display text-xs text-glow-sky/60 tracking-[0.3em] uppercase mb-1">SHADOW EXTRACTION</div>
-          <h1 className="font-display text-2xl text-white tracking-wider">SHADOW ARMY</h1>
+          <h1 className="font-display text-2xl text-white tracking-wider uppercase mb-1">PLAYER COLLECTION</h1>
         </div>
-        {!isLoading && (
-          <div className="text-right">
-            <div className="font-display text-2xl text-glow-sky">{totalUnlocked}</div>
-            <div className="font-body text-xs text-white/40">/ {SHADOW_SOLDIERS.length} Summoned</div>
-          </div>
-        )}
       </div>
 
       {isLoading ? (
@@ -49,96 +42,91 @@ export function ArmyClient() {
           {totalUnlocked === 0 && (
             <div className="panel p-6 text-center">
               <p className="text-white/40 font-body text-sm italic">
-                Your army sleeps in the void. Complete your first quest to summon them.
+                Your collection is empty. Complete your first quest to begin collecting.
               </p>
             </div>
           )}
           <ul
             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
             role="list"
-            aria-label="Shadow army soldiers"
+            aria-label="Player collection items"
           >
-            {SHADOW_SOLDIERS.map((soldier, idx) => {
-              const unlocked = unlockedKeys.has(soldier.key)
-              const color = SOLDIER_COLORS[idx % SOLDIER_COLORS.length]
+              {SHADOW_SOLDIERS.map((soldier, idx) => {
+                const unlocked = unlockedKeys.has(soldier.key)
+                const color = SOLDIER_COLORS[idx % SOLDIER_COLORS.length]
 
-              return (
-                <li
-                  key={soldier.key}
-                  className={`panel p-4 flex flex-col items-center text-center transition-all duration-300 ${
-                    unlocked ? 'panel-hover' : 'opacity-40'
-                  }`}
-                  aria-label={unlocked ? `${soldier.name} — Summoned` : `Locked soldier — unlock at ${soldier.unlockAt} quests`}
-                >
-                  {/* Silhouette */}
-                  <div className="mb-3 relative" aria-hidden="true">
-                    <svg
-                      width="56"
-                      height="72"
-                      viewBox="0 0 56 72"
-                      fill="none"
-                      style={{
-                        filter: unlocked ? `drop-shadow(0 0 8px ${color}60)` : 'none',
-                      }}
-                    >
-                      {/* Abstract silhouette bust — angular, not any character likeness */}
-                      <polygon
-                        points="28,4 44,14 44,36 36,44 28,48 20,44 12,36 12,14"
-                        fill={unlocked ? `${color}20` : 'rgba(60,60,80,0.3)'}
-                        stroke={unlocked ? color : 'rgba(100,100,130,0.4)'}
-                        strokeWidth="1.5"
-                      />
-                      {/* Eyes */}
-                      {unlocked && (
-                        <>
-                          <circle cx="22" cy="22" r="2.5" fill={color} opacity="0.9">
-                            <animate attributeName="opacity" values="0.9;0.4;0.9" dur="3s" repeatCount="indefinite" />
-                          </circle>
-                          <circle cx="34" cy="22" r="2.5" fill={color} opacity="0.9">
-                            <animate attributeName="opacity" values="0.9;0.4;0.9" dur="3s" begin="0.1s" repeatCount="indefinite" />
-                          </circle>
-                        </>
-                      )}
-                      {/* Shoulders */}
-                      <polygon
-                        points="12,36 4,52 20,52 28,48 36,52 52,52 44,36"
-                        fill={unlocked ? `${color}15` : 'rgba(40,40,60,0.3)'}
-                        stroke={unlocked ? color : 'rgba(80,80,110,0.3)'}
-                        strokeWidth="1"
-                      />
-                    </svg>
-                    {!unlocked && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" aria-hidden="true">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Name */}
-                  <div
-                    className="font-display text-xs font-bold tracking-wider mb-1"
-                    style={{ color: unlocked ? color : 'rgba(255,255,255,0.2)' }}
+                return (
+                  <li
+                    key={soldier.key}
+                    className={`panel p-4 flex flex-col items-center text-center transition-all duration-300 ${
+                      unlocked ? 'panel-hover' : 'opacity-40'
+                    }`}
+                    aria-label={unlocked ? `${soldier.name} — Collected` : `Locked item — unlock at ${soldier.unlockAt} quests`}
                   >
-                    {unlocked ? soldier.name : '???'}
-                  </div>
+                    {/* Silhouette */}
+                    <div className="mb-3 relative" aria-hidden="true">
+                      <svg
+                        width="56"
+                        height="72"
+                        viewBox="0 0 56 72"
+                        fill="none"
+                        style={{
+                          filter: unlocked ? `drop-shadow(0 0 8px ${color}60)` : 'none',
+                        }}
+                      >
+                        <polygon
+                          points="28,4 44,14 44,36 36,44 28,48 20,44 12,36 12,14"
+                          fill={unlocked ? `${color}20` : 'rgba(60,60,80,0.3)'}
+                          stroke={unlocked ? color : 'rgba(100,100,130,0.4)'}
+                          strokeWidth="1.5"
+                        />
+                        {unlocked && (
+                          <>
+                            <circle cx="22" cy="22" r="2.5" fill={color} opacity="0.9">
+                              <animate attributeName="opacity" values="0.9;0.4;0.9" dur="3s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="34" cy="22" r="2.5" fill={color} opacity="0.9">
+                              <animate attributeName="opacity" values="0.9;0.4;0.9" dur="3s" begin="0.1s" repeatCount="indefinite" />
+                            </circle>
+                          </>
+                        )}
+                        <polygon
+                          points="12,36 4,52 20,52 28,48 36,52 52,52 44,36"
+                          fill={unlocked ? `${color}15` : 'rgba(40,40,60,0.3)'}
+                          stroke={unlocked ? color : 'rgba(80,80,110,0.3)'}
+                          strokeWidth="1"
+                        />
+                      </svg>
+                      {!unlocked && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Unlock info */}
-                  {unlocked ? (
-                    <p className="font-body text-xs text-white/30 leading-snug">{soldier.description}</p>
-                  ) : (
-                    <p className="font-body text-xs text-white/20">
-                      Complete {soldier.unlockAt} quest{soldier.unlockAt !== 1 ? 's' : ''}
-                    </p>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </>
-      )}
+                    <div
+                      className="font-display text-xs font-bold tracking-wider mb-1"
+                      style={{ color: unlocked ? color : 'rgba(255,255,255,0.2)' }}
+                    >
+                      {unlocked ? soldier.name : '???'}
+                    </div>
+
+                    {unlocked ? (
+                      <p className="font-body text-xs text-white/30 leading-snug">{soldier.description}</p>
+                    ) : (
+                      <p className="font-body text-xs text-white/20">
+                        Complete {soldier.unlockAt} quest{soldier.unlockAt !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        )}
     </div>
   )
 }

@@ -1,8 +1,8 @@
 import { ArmyClient } from '@/components/pages/ArmyClient'
 
 export const metadata = {
-  title: 'Shadow Army — Life RPG',
-  description: 'Your summoned shadow soldiers. Unlocked through real-world achievements.',
+  title: 'Player Collection — Life RPG',
+  description: 'Your collected items. Unlocked through real-world achievements.',
 }
 
 export default function ArmyPage() {

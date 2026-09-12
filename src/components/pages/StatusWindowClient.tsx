@@ -4,6 +4,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { useQuests, useCompleteQuest } from '@/hooks/useQuests'
 import { getAudioManager } from '@/lib/audio/AudioManager'
 import { SystemNotification } from '@/components/ui/SystemNotification'
+import { RadarChart } from '@/components/ui/RadarChart'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Quest, Rank } from '@/types'
 import { useState, useEffect } from 'react'
@@ -242,36 +243,24 @@ export function StatusWindowClient() {
                 </div>
               </div>
 
-              {/* Attributes Terminal Style */}
-              <div className="bg-cyan-950/10 p-6 border border-cyan-500/10 rounded-sm relative overflow-hidden">
+              {/* Attributes Radar Web Chart */}
+              <div className="bg-cyan-950/10 p-6 border border-cyan-500/10 rounded-sm relative overflow-hidden flex flex-col items-center">
                 {/* Sweep animation overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent h-[200%] -top-[100%] animate-[scanline-scroll_4s_linear_infinite]" />
                 
-                <div className="text-cyan-500/70 font-display tracking-[0.2em] text-[10px] uppercase mb-6 font-bold relative z-10">
+                <div className="w-full text-cyan-500/70 font-display tracking-[0.2em] text-[10px] uppercase mb-2 font-bold relative z-10 text-left">
                   Attributes
                 </div>
-                <div className="space-y-4 relative z-10">
-                  {STAT_KEYS.map(({ key, label }, i) => {
-                    const value = profile[key as keyof typeof profile] as number
-                    const pct = Math.min(100, (value / Math.max(maxStat, 1)) * 100)
-                    return (
-                      <div key={key} className="flex items-center gap-4 group">
-                        <span className="text-cyan-200 font-display tracking-widest text-xs w-12 font-bold">{label}</span>
-                        <span className="text-white font-mono text-sm w-8 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{value}</span>
-                        <div className="flex-1 h-[2px] bg-cyan-950">
-                          <motion.div 
-                            initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.5, delay: 1 + (i * 0.1), ease: "easeOut" }}
-                            className="h-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] relative"
-                          >
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-2 bg-white drop-shadow-[0_0_5px_#ffffff]" />
-                          </motion.div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="mt-8 pt-4 border-t border-cyan-500/20 flex justify-between text-cyan-500/50 font-display text-[9px] tracking-[0.2em] uppercase font-bold relative z-10">
-                  {/* Text removed by user request */}
+                
+                <div className="relative z-10 w-full flex items-center justify-center">
+                  <RadarChart
+                    stats={STAT_KEYS.map(({ key, label }) => ({
+                      key,
+                      label,
+                      value: profile[key as keyof typeof profile] as number,
+                    }))}
+                    maxVal={maxStat}
+                  />
                 </div>
               </div>
 

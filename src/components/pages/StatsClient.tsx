@@ -11,16 +11,7 @@ const STAT_KEYS: Array<{ key: StatKey; label: string; discipline: Discipline; fu
   { key: 'stat_str', label: 'STR', discipline: 'strength',   full: 'Strength' },
   { key: 'stat_agi', label: 'AGI', discipline: 'agility',    full: 'Agility' },
   { key: 'stat_vit', label: 'VIT', discipline: 'vitality',   full: 'Vitality' },
-  { key: 'stat_per', label: 'PER', discipline: 'perception', full: 'Perception' },
 ]
-
-const STAT_DESCRIPTIONS: Record<Discipline, string> = {
-  intellect: 'Raised by completing Intellect-class quests — coding, reading, studying, planning.',
-  strength: 'Raised by completing Strength-class quests — training, lifting, physical challenges.',
-  agility: 'Raised by completing Agility-class quests — running, sports, speed-based tasks.',
-  vitality: 'Raised by completing Vitality-class quests — sleep, nutrition, health routines.',
-  perception: 'Raised by completing Perception-class quests — observation, creativity, analysis.',
-}
 
 export function StatsClient() {
   const { data, isLoading, error, refetch } = useProfile()
@@ -37,16 +28,12 @@ export function StatsClient() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <div className="font-display text-xs text-glow-sky/60 tracking-[0.3em] uppercase mb-1">HUNTER ATTRIBUTES</div>
-        <h1 className="font-display text-2xl text-white tracking-wider">STAT ALLOCATION</h1>
-        <p className="font-body text-sm text-white/40 mt-1">
-          Stats grow automatically as you complete discipline-tagged quests. No manual allocation.
-        </p>
+        <h1 className="font-display text-2xl text-white tracking-wider">PLAYER STATS</h1>
       </div>
 
       {isLoading ? (
         <div className="space-y-4" aria-busy="true">
-          {[...Array(5)].map((_, i) => <div key={i} className="panel h-28 skeleton" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="panel h-28 skeleton" />)}
         </div>
       ) : (
         <div className="space-y-4">
@@ -58,7 +45,7 @@ export function StatsClient() {
 
             return (
               <div key={key} className="panel p-5" aria-label={`${full}: ${value} points`}>
-                <div className="flex items-start gap-4">
+                <div className="flex items-center gap-4">
                   {/* Icon + label */}
                   <div className="flex-shrink-0 flex flex-col items-center gap-1 w-16">
                     <DisciplineIcon discipline={discipline} size={28} />
@@ -80,7 +67,7 @@ export function StatsClient() {
 
                     {/* Progress bar */}
                     <div
-                      className="h-2 bg-void-surface rounded-full overflow-hidden mb-2"
+                      className="h-2 bg-void-surface rounded-full overflow-hidden"
                       role="meter"
                       aria-valuenow={value}
                       aria-valuemin={0}
@@ -96,8 +83,6 @@ export function StatsClient() {
                         }}
                       />
                     </div>
-
-                    <p className="font-body text-xs text-white/30">{STAT_DESCRIPTIONS[discipline]}</p>
                   </div>
                 </div>
               </div>
