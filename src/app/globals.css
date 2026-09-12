@@ -1,0 +1,378 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Life RPG — Global Styles
+   THE SYSTEM Hunter Interface
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* Palette */
+    --color-void: #020611;
+    --color-void-surface: #040c1e;
+    --color-void-panel: #061126;
+    --color-void-border: rgba(59, 130, 246, 0.4);
+
+    --color-glow: #3B82F6;
+    --color-glow-sky: #7DD3FC;
+    --color-glow-violet: #8B5CF6;
+    --color-gold: #FBBF24;
+    --color-danger: #EF4444;
+
+    --color-rank-e: #9CA3AF;
+    --color-rank-d: #6EE7B7;
+    --color-rank-c: #93C5FD;
+    --color-rank-b: #C084FC;
+    --color-rank-a: #FCD34D;
+    --color-rank-s: #F97316;
+
+    /* Typography */
+    --font-display: var(--font-orbitron), var(--font-rajdhani), 'Chakra Petch', sans-serif;
+    --font-body: var(--font-ibm-plex), Inter, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @keyframes bg-scan {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100px; }
+  }
+
+  body {
+    background-color: var(--color-void);
+    color: #e2e8f0;
+    font-family: var(--font-body);
+    line-height: 1.6;
+    /* Global faint grid texture */
+    background-image:
+      linear-gradient(rgba(30, 58, 138, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30, 58, 138, 0.12) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: bg-scan 10s linear infinite;
+  }
+
+  /* Focus ring — blue glow, visible on keyboard nav */
+  :focus-visible {
+    outline: 2px solid var(--color-glow-sky);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-void-surface); }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(96, 165, 250, 0.8); }
+}
+
+@layer components {
+  /* ---------------------------------------------------------------
+     Glass Panel — the signature translucent status window
+  --------------------------------------------------------------- */
+  @keyframes panel-pulse {
+    0%, 100% {
+      box-shadow: inset 0 0 30px rgba(37, 99, 235, 0.15), 0 0 10px rgba(59, 130, 246, 0.15);
+      border-top-color: rgba(96, 165, 250, 0.7);
+      border-bottom-color: rgba(96, 165, 250, 0.7);
+    }
+    50% {
+      box-shadow: inset 0 0 50px rgba(37, 99, 235, 0.35), 0 0 25px rgba(96, 165, 250, 0.3);
+      border-top-color: rgba(147, 197, 253, 1);
+      border-bottom-color: rgba(147, 197, 253, 1);
+    }
+  }
+
+  @keyframes hologram-scan {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 60px; } /* Must be a multiple of background-size (30px) for seamless loop */
+  }
+
+  .panel {
+    position: relative;
+    background: rgba(3, 9, 20, 0.85);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-top: 2px solid rgba(96, 165, 250, 0.9);
+    border-bottom: 2px solid rgba(96, 165, 250, 0.9);
+    box-shadow:
+      inset 0 0 40px rgba(37, 99, 235, 0.2),
+      0 0 15px rgba(59, 130, 246, 0.2);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 0;
+    z-index: 1;
+    animation: panel-pulse 4s ease-in-out infinite;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.2) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.2) 1px, transparent 1px);
+    background-size: 30px 30px;
+    opacity: 0.3;
+    z-index: -1;
+    animation: hologram-scan 4s linear infinite;
+  }
+
+  .panel::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px dashed rgba(96, 165, 250, 0.15);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .panel-hover {
+    transition: all 200ms ease;
+  }
+  .panel-hover:hover {
+    border-color: rgba(147, 197, 253, 0.8);
+    box-shadow:
+      inset 0 0 60px rgba(59, 130, 246, 0.3),
+      0 0 25px rgba(96, 165, 250, 0.4);
+  }
+
+  /* ---------------------------------------------------------------
+     Glow text
+  --------------------------------------------------------------- */
+  .text-glow {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.4);
+  }
+  .text-glow-gold {
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.8), 0 0 40px rgba(251, 191, 36, 0.4);
+  }
+
+  /* ---------------------------------------------------------------
+     XP Bar
+  --------------------------------------------------------------- */
+  .xp-bar {
+    background: rgba(15, 15, 23, 0.9);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563EB, #7DD3FC);
+    border-radius: 2px;
+    position: relative;
+    transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .xp-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 40px;
+    background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.6));
+  }
+
+  /* ---------------------------------------------------------------
+     Scan-line skeleton (loading state)
+  --------------------------------------------------------------- */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(30, 30, 45, 0.8) 25%,
+      rgba(59, 130, 246, 0.08) 50%,
+      rgba(30, 30, 45, 0.8) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-scan 1.8s ease-in-out infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes skeleton-scan {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ---------------------------------------------------------------
+     Rank badge colors
+  --------------------------------------------------------------- */
+  .rank-e { color: var(--color-rank-e); border-color: var(--color-rank-e); }
+  .rank-d { color: var(--color-rank-d); border-color: var(--color-rank-d); }
+  .rank-c { color: var(--color-rank-c); border-color: var(--color-rank-c); }
+  .rank-b { color: var(--color-rank-b); border-color: var(--color-rank-b); }
+  .rank-a { color: var(--color-rank-a); border-color: var(--color-rank-a); }
+  .rank-s { color: var(--color-rank-s); border-color: var(--color-rank-s); }
+
+  /* ---------------------------------------------------------------
+     Button base
+  --------------------------------------------------------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 0;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 150ms ease;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--color-glow-sky);
+    outline-offset: 2px;
+  }
+
+  .btn-primary {
+    background: rgba(3, 9, 20, 0.6);
+    border-color: rgba(96, 165, 250, 0.6);
+    box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.2);
+    color: #BFDBFE;
+  }
+  .btn-primary:hover {
+    background: rgba(3, 9, 20, 0.8);
+    border-color: #60A5FA;
+    box-shadow: 
+      inset 0 0 20px rgba(96, 165, 250, 0.4), 
+      0 0 15px rgba(59, 130, 246, 0.4);
+    color: #EFF6FF;
+    text-shadow: 0 0 8px #60A5FA;
+  }
+
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.1);
+    color: #FCA5A5;
+  }
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #F87171;
+    box-shadow: 
+      inset 0 0 20px rgba(239, 68, 68, 0.3), 
+      0 0 15px rgba(239, 68, 68, 0.3);
+    color: #FEF2F2;
+    text-shadow: 0 0 8px #F87171;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: rgba(96, 165, 250, 0.2);
+    color: rgba(147, 197, 253, 0.7);
+  }
+  .btn-ghost:hover {
+    border-color: rgba(96, 165, 250, 0.6);
+    background: rgba(59, 130, 246, 0.05);
+    color: #BFDBFE;
+    box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.2);
+  }
+
+  /* ---------------------------------------------------------------
+     Difficulty badge
+  --------------------------------------------------------------- */
+  .diff-badge {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+  }
+
+  /* ---------------------------------------------------------------
+     Lightning Button (Gate Theme)
+  --------------------------------------------------------------- */
+  @keyframes lightning-pulse {
+    0% {
+      box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff;
+      border-color: rgba(0, 240, 255, 0.6);
+    }
+    48% {
+      box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff;
+      border-color: rgba(0, 240, 255, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 40px #00f0ff, 0 0 80px #00f0ff, inset 0 0 30px #00f0ff;
+      border-color: #ffffff;
+    }
+    52% {
+      box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff;
+      border-color: rgba(0, 240, 255, 0.6);
+    }
+    54% {
+      box-shadow: 0 0 60px #00f0ff, 0 0 100px #00f0ff, inset 0 0 50px #ffffff;
+      border-color: #ffffff;
+    }
+    58% {
+      box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff;
+      border-color: rgba(0, 240, 255, 0.6);
+    }
+    100% {
+      box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff;
+      border-color: rgba(0, 240, 255, 0.6);
+    }
+  }
+
+  .btn-lightning {
+    animation: lightning-pulse 3s infinite;
+    background: rgba(0, 5, 15, 0.8);
+    border: 2px solid #00f0ff;
+    color: #ffffff;
+    text-shadow: 0 0 8px #ffffff, 0 0 20px #00f0ff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-lightning:hover {
+    background: #00f0ff;
+    color: #000;
+    box-shadow: 0 0 50px #00f0ff, 0 0 120px #00f0ff !important;
+    text-shadow: none;
+    animation: none;
+    border-color: #00f0ff;
+  }
+}
+
+@layer utilities {
+  /* ---------------------------------------------------------------
+     prefers-reduced-motion overrides
+  --------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .xp-bar-fill {
+      transition: none !important;
+    }
+
+    .skeleton {
+      animation: none !important;
+      background: rgba(30, 30, 45, 0.8) !important;
+    }
+  }
+}
