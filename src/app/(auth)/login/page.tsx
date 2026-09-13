@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useHasAwakened } from '@/hooks/useHasAwakened'
 import { AwakeningGate, ElectricSparks } from '@/components/awakening/AwakeningGate'
+import { getAudioManager } from '@/lib/audio/AudioManager'
 import { motion } from 'framer-motion'
 
 export default function LoginPage() {
@@ -48,6 +49,12 @@ export default function LoginPage() {
         }
         return
       }
+
+      try {
+        sessionStorage.setItem('life-rpg:play-login-audio', '1')
+      } catch {}
+      getAudioManager().playLoginSuccess()
+      await new Promise((res) => setTimeout(res, 600))
 
       router.push('/dashboard')
       router.refresh()
@@ -247,6 +254,11 @@ function DemoButton() {
   async function handleDemo() {
     setLoading(true)
     try {
+      try {
+        sessionStorage.setItem('life-rpg:play-login-audio', '1')
+      } catch {}
+      getAudioManager().playLoginSuccess()
+
       // Sign out any stale Supabase session first so demo is clean
       try {
         const { getSupabaseBrowserClient } = await import('@/lib/supabase/client')
@@ -255,6 +267,8 @@ function DemoButton() {
       const { enterDemoMode } = await import('@/lib/demo/demoMode')
       enterDemoMode()
       await fetch('/api/demo', { method: 'POST' })
+      // Brief pause to allow the sound to start playing cleanly
+      await new Promise((res) => setTimeout(res, 600))
       // Hard navigation ensures the demo cookie is sent on the next request
       window.location.href = '/dashboard'
     } catch {

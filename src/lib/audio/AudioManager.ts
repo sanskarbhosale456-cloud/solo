@@ -12,7 +12,7 @@
 import { Howl, Howler } from 'howler'
 
 type AmbientPage = 'status' | 'quests' | 'shop' | 'gate'
-type SFXName = 'complete' | 'levelup' | 'rankup' | 'click' | 'entrance'
+type SFXName = 'complete' | 'levelup' | 'rankup' | 'click' | 'entrance' | 'loginSuccess'
 
 const VOLUME_KEY = 'life-rpg:volume'
 const MUTED_KEY = 'life-rpg:muted'
@@ -30,6 +30,7 @@ const SFX_SRCS: Record<SFXName, string> = {
   rankup: '/audio/sfx-rankup.wav',
   click: '/audio/sfx-click.wav',
   entrance: '/audio/soundForEntrance.mp3',
+  loginSuccess: '/audio/soundForLoginSuccess.mpeg',
 }
 
 class AudioManagerClass {
@@ -128,6 +129,36 @@ class AudioManagerClass {
       return sound
     } catch (e) {
       console.warn('Could not play entrance audio:', e)
+      return null
+    }
+  }
+
+  /** Play the login / demo success sound — call just before navigating to dashboard */
+  playLoginSuccess() {
+    this.unlock()
+    try {
+      const vol = this.muted ? 0 : Math.max(0.85, this.volume * 2.5)
+      const sound = new Howl({
+        src: ['/audio/soundForLoginSuccess.mp3', '/audio/soundForLoginSuccess.mpeg'],
+        volume: vol,
+        html5: true,
+        onloaderror: () => {
+          try {
+            const a = new Audio('/audio/soundForLoginSuccess.mp3')
+            a.volume = Math.min(1, vol)
+            a.play().catch(() => {})
+          } catch {}
+        },
+      })
+      sound.play()
+      return sound
+    } catch (e) {
+      console.warn('Could not play login success audio:', e)
+      try {
+        const a = new Audio('/audio/soundForLoginSuccess.mp3')
+        a.volume = 0.85
+        a.play().catch(() => {})
+      } catch {}
       return null
     }
   }

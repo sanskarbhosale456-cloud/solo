@@ -28,6 +28,16 @@ export function StatusWindowClient() {
   const [glitch, setGlitch] = useState(false)
 
   useEffect(() => {
+    // Play login sound if arriving after login / authenticate / demo
+    try {
+      if (sessionStorage.getItem('life-rpg:play-login-audio') === '1') {
+        sessionStorage.removeItem('life-rpg:play-login-audio')
+        setTimeout(() => {
+          getAudioManager().playLoginSuccess()
+        }, 300)
+      }
+    } catch {}
+
     // Randomly glitch the system every 3-7 seconds
     const glitchInterval = setInterval(() => {
       setGlitch(true)
