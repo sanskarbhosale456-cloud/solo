@@ -1,29 +1,49 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
-const globalForDb = globalThis as typeof globalThis & {
-  __arenaNextJsPostgresqlPool?: Pool;
+const g = globalThis as typeof globalThis & {
+  __pgPool?: Pool;
+  __pgDb?: NodePgDatabase;
 };
 
-function getPool(): Pool {
-  if (globalForDb.__arenaNextJsPostgresqlPool) {
-    return globalForDb.__arenaNextJsPostgresqlPool;
-  }
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required");
-  }
-  const pool = new Pool({ connectionString: databaseUrl });
+/** Only called at request-time, never at build/import time */
+function getDb(): NodePgDatabase {
+  if (g.__pgDb) return g.__pgDb;
+
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is required");
+
+  const pool = g.__pgPool ?? new Pool({ connectionString: url });
+  const db = drizzle(pool);
+
   if (process.env.NODE_ENV !== "production") {
-    globalForDb.__arenaNextJsPostgresqlPool = pool;
+    g.__pgPool = pool;
+    g.__pgDb = db;
   }
-  return pool;
+
+  return db;
 }
 
-export const pool = new Proxy({} as Pool, {
+/**
+ * Lazy proxy — drizzle() is never called during module initialisation / Next.js
+ * static build. It is only invoked the first time a route actually executes a
+ * query, at which point DATABASE_URL must already be present in the environment.
+ */
+export const db = new Proxy({} as NodePgDatabase, {
   get(_target, prop) {
-    return (getPool() as unknown as Record<string | symbol, unknown>)[prop];
+    return Reflect.get(getDb(), prop);
+  },
+  apply(_target, thisArg, args) {
+    return Reflect.apply(getDb() as unknown as Function, thisArg, args);
   },
 });
 
-export const db = drizzle(pool);
+/** Convenience for the rare case where you need the raw Pool */
+export const pool = new Proxy({} as Pool, {
+  get(_target, prop) {
+    // Access pool lazily through getDb which initialises it
+    getDb();
+    return Reflect.get(g.__pgPool!, prop);
+  },
+});
