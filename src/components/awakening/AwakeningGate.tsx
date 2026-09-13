@@ -144,15 +144,40 @@ export function AwakeningGate({ onComplete }: AwakeningGateProps) {
 
   useEffect(() => {
     const timer = setTimeout(() => setShowText(false), 4500)
-    return () => clearTimeout(timer)
+
+    // Attempt immediate playback upon entering the website
+    getAudioManager().playWebsiteIntro()
+
+    // Browser policy fallback: If browser blocks unprompted autoplay before user interaction,
+    // immediately trigger on the first touch/click/key anywhere on the page
+    const unlockAndPlay = () => {
+      getAudioManager().playWebsiteIntro()
+      window.removeEventListener('pointerdown', unlockAndPlay)
+      window.removeEventListener('click', unlockAndPlay)
+      window.removeEventListener('keydown', unlockAndPlay)
+      window.removeEventListener('touchstart', unlockAndPlay)
+    }
+
+    window.addEventListener('pointerdown', unlockAndPlay, { once: true })
+    window.addEventListener('click', unlockAndPlay, { once: true })
+    window.addEventListener('keydown', unlockAndPlay, { once: true })
+    window.addEventListener('touchstart', unlockAndPlay, { once: true })
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('pointerdown', unlockAndPlay)
+      window.removeEventListener('click', unlockAndPlay)
+      window.removeEventListener('keydown', unlockAndPlay)
+      window.removeEventListener('touchstart', unlockAndPlay)
+    }
   }, [])
 
   const handleEnterClick = () => {
     try {
-      getAudioManager().playEntrance()
+      getAudioManager().playWebsiteIntro()
     } catch {
       try {
-        const audio = new Audio('/audio/soundForEntrance.mp3')
+        const audio = new Audio('/audio/websiteIntro.mp3')
         audio.volume = 0.85
         audio.play().catch(() => {})
       } catch {}

@@ -12,7 +12,7 @@
 import { Howl, Howler } from 'howler'
 
 type AmbientPage = 'status' | 'quests' | 'shop' | 'gate'
-type SFXName = 'complete' | 'levelup' | 'rankup' | 'click' | 'entrance' | 'loginSuccess'
+type SFXName = 'complete' | 'levelup' | 'rankup' | 'click' | 'entrance' | 'loginSuccess' | 'websiteIntro'
 
 const VOLUME_KEY = 'life-rpg:volume'
 const MUTED_KEY = 'life-rpg:muted'
@@ -31,6 +31,7 @@ const SFX_SRCS: Record<SFXName, string> = {
   click: '/audio/sfx-click.wav',
   entrance: '/audio/soundForEntrance.mp3',
   loginSuccess: '/audio/soundForLoginSuccess.mpeg',
+  websiteIntro: '/audio/websiteIntro.mp3',
 }
 
 class AudioManagerClass {
@@ -38,6 +39,7 @@ class AudioManagerClass {
   private currentAmbient: Howl | null = null
   private currentAmbientKey: AmbientPage | null = null
   private sfxCache: Map<SFXName, Howl> = new Map()
+  private introSound: Howl | null = null
   private volume = 0.3
   private muted = false
 
@@ -156,6 +158,40 @@ class AudioManagerClass {
       console.warn('Could not play login success audio:', e)
       try {
         const a = new Audio('/audio/soundForLoginSuccess.mp3')
+        a.volume = 0.85
+        a.play().catch(() => {})
+      } catch {}
+      return null
+    }
+  }
+
+  /** Play the website intro audio immediately when entering the website */
+  playWebsiteIntro() {
+    this.unlock()
+    if (this.introSound && this.introSound.playing()) {
+      return this.introSound
+    }
+    try {
+      const vol = this.muted ? 0 : Math.max(0.85, this.volume * 2.5)
+      const sound = new Howl({
+        src: ['/audio/websiteIntro.mp3', '/audio/websiteIntro.mpeg'],
+        volume: vol,
+        html5: true,
+        onloaderror: () => {
+          try {
+            const a = new Audio('/audio/websiteIntro.mp3')
+            a.volume = Math.min(1, vol)
+            a.play().catch(() => {})
+          } catch {}
+        },
+      })
+      sound.play()
+      this.introSound = sound
+      return sound
+    } catch (e) {
+      console.warn('Could not play website intro audio:', e)
+      try {
+        const a = new Audio('/audio/websiteIntro.mp3')
         a.volume = 0.85
         a.play().catch(() => {})
       } catch {}
