@@ -13,58 +13,32 @@ const NAV_ITEMS = [
     href: '/dashboard',
     label: 'Status Window',
     shortLabel: 'STATUS',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-        <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-      </svg>
-    ),
+    iconSrc: '/icons/nav/status.png',
   },
   {
     href: '/quests',
     label: 'Quest Log',
     shortLabel: 'QUESTS',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-      </svg>
-    ),
+    iconSrc: '/icons/nav/quests.png',
   },
   {
     href: '/stats',
     label: 'Player Stats',
     shortLabel: 'STATS',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/>
-        <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/>
-      </svg>
-    ),
+    iconSrc: '/icons/nav/stats.png',
   },
   {
     href: '/army',
     label: 'Collection',
     shortLabel: 'ARMY',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-    ),
+    iconSrc: '/icons/nav/collection.png',
   },
   {
     href: '/shop',
     label: 'Shop',
     shortLabel: 'SHOP',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-        <line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-      </svg>
-    ),
+    iconSrc: '/icons/nav/shop.png',
   },
-
 ] as const
 
 interface AppShellProps {
@@ -156,8 +130,15 @@ export function AppShell({ children }: AppShellProps) {
                     }`}
                   aria-current={active ? 'page' : undefined}
                 >
-                  <span className={`flex-shrink-0 transition-colors ${active ? 'text-cyan-300 drop-shadow-[0_0_8px_#00f0ff]' : 'text-white/40 group-hover:text-white/80'}`}>
-                    {item.icon}
+                  <span className={`flex-shrink-0 relative w-8 h-8 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${active ? 'drop-shadow-[0_0_12px_rgba(0,240,255,0.7)]' : 'opacity-85 group-hover:opacity-100 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]'}`}>
+                    <Image
+                      src={item.iconSrc}
+                      alt=""
+                      width={32}
+                      height={32}
+                      unoptimized
+                      className="w-8 h-8 object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
+                    />
                   </span>
                   <span>{item.label}</span>
                   {active && (
@@ -246,7 +227,16 @@ export function AppShell({ children }: AppShellProps) {
                         ${active ? 'bg-cyan-500/15 text-cyan-300 border-l-2 border-cyan-400 shadow-[inset_10px_0_15px_-10px_rgba(0,240,255,0.4)]' : 'text-blue-100/60 hover:text-blue-100 border-l-2 border-transparent'}`}
                       aria-current={active ? 'page' : undefined}
                     >
-                      <span aria-hidden="true">{item.icon}</span>
+                      <span aria-hidden="true" className="relative w-7 h-7 flex-shrink-0 flex items-center justify-center">
+                        <Image
+                          src={item.iconSrc}
+                          alt=""
+                          width={28}
+                          height={28}
+                          unoptimized
+                          className="w-7 h-7 object-contain"
+                        />
+                      </span>
                       {item.label}
                     </Link>
                   </li>
@@ -279,7 +269,16 @@ export function AppShell({ children }: AppShellProps) {
                   aria-label={item.label}
                   aria-current={active ? 'page' : undefined}
                 >
-                  {item.icon}
+                  <span className="relative w-6 h-6 flex-shrink-0 flex items-center justify-center">
+                    <Image
+                      src={item.iconSrc}
+                      alt=""
+                      width={24}
+                      height={24}
+                      unoptimized
+                      className="w-6 h-6 object-contain"
+                    />
+                  </span>
                   <span className="text-[9px] font-display tracking-wider uppercase">{item.shortLabel}</span>
                 </Link>
               </li>
