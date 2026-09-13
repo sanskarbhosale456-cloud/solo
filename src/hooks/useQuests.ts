@@ -10,9 +10,24 @@ import {
   saveDemoQuests,
   getDemoProfile,
   saveDemoProfile,
+  getDemoSoldiers,
+  saveDemoSoldiers,
   demoCompleteQuest,
-  DEMO_SOLDIERS,
 } from '@/lib/demo/demoMode'
+
+function parseError(json: unknown, fallback: string): string {
+  const obj = json as Record<string, unknown> | null
+  const err = obj?.error as { message?: string } | string | undefined
+  if (typeof err === 'string') return err
+  if (err?.message) return err.message
+  if (typeof obj?.errorMessage === 'string') return obj.errorMessage as string
+  return fallback
+}
+
+function unwrap<T>(json: Record<string, unknown>, key: string): T {
+  const inner = (json.data as Record<string, unknown>) ?? {}
+  return ((inner[key] ?? json[key]) as T) ?? (json.data as T)
+}
 
 // ---------------------------------------------------------------
 // Fetch hooks
@@ -26,7 +41,11 @@ export function useQuests(status: 'active' | 'completed' | 'all' = 'active', typ
         const quests = getDemoQuests()
         return quests.filter((q) => {
           const matchStatus = status === 'all' || q.status === status
-          const matchType = !type || q.type === type
+          const matchType =
+            !type ||
+            q.type === type ||
+            q.quest_type === type ||
+            (type === 'weekly' && (q.type === 'weekly' || q.quest_type === 'quest'))
           return matchStatus && matchType
         })
       }
@@ -34,11 +53,11 @@ export function useQuests(status: 'active' | 'completed' | 'all' = 'active', typ
       const params = new URLSearchParams({ status })
       if (type) params.set('type', type)
       const res = await fetch(`/api/quests?${params}`)
-      if (!res.ok) throw new Error(`Failed to fetch quests: ${res.status}`)
-      const data = await res.json()
-      return data.quests as Quest[]
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(parseError(json, `Failed to fetch quests: ${res.status}`))
+      return unwrap<Quest[]>(json, 'quests') ?? []
     },
-    retry: isDemoMode() ? false : 2,
+    retry: false,
   })
 }
 
@@ -54,10 +73,10 @@ export function useCreateQuest() {
 
   return useMutation({
     mutationFn: async (input: CreateQuestInput) => {
-      // Demo mode: add to localStorage
+      // Demo mode: add to localStorage (mirror server reward tables)
       if (isDemoMode()) {
-        const xpMap: Record<string, number> = { E: 50, D: 80, C: 180, B: 340, A: 600, S: 1000 }
-        const goldMap: Record<string, number> = { E: 25, D: 40, C: 90, B: 170, A: 300, S: 500 }
+        const xpMap: Record<string, number> = { E: 30, D: 70, C: 140, B: 280, A: 500, S: 1000 }
+        const goldMap: Record<string, number> = { E: 10, D: 25, C: 50, B: 100, A: 200, S: 500 }
         const assignedType = input.type ?? (input.quest_type === 'daily' ? 'daily' : 'weekly')
         const newQuest: Quest = {
           id: `demo-${Date.now()}`,
@@ -67,9 +86,12 @@ export function useCreateQuest() {
           type: assignedType,
           quest_type: assignedType === 'daily' ? 'daily' : 'quest',
           discipline: input.discipline ?? 'strength',
-          stat_tags: input.stat_tags && input.stat_tags.length > 0 ? input.stat_tags : [(input.discipline ?? 'strength').toUpperCase()],
+          stat_tags:
+            input.stat_tags && input.stat_tags.length > 0
+              ? input.stat_tags
+              : [(input.discipline ?? 'strength').toUpperCase()],
           difficulty: input.difficulty ?? 'C',
-          xp_reward: xpMap[input.difficulty ?? 'C'] ?? 100,
+          xp_reward: xpMap[input.difficulty ?? 'C'] ?? 140,
           gold_reward: goldMap[input.difficulty ?? 'C'] ?? 50,
           status: 'active',
           due_date: input.due_date ?? null,
@@ -87,15 +109,16 @@ export function useCreateQuest() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
       })
+      const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(err.error ?? 'Failed to create quest')
+        throw new Error(parseError(json, 'Failed to create quest'))
       }
-      const data = await res.json()
-      return data.quest as Quest
+      return unwrap<Quest>(json, 'quest')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quests'] })
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
     },
   })
 }
@@ -114,16 +137,11 @@ export function useCompleteQuest() {
         const quests = getDemoQuests()
         const quest = quests.find((q) => q.id === questId)
         if (!quest) throw new Error('Quest not found')
+        if (quest.status !== 'active') throw new Error('Quest already completed')
 
         const profile = getDemoProfile()
         const completedCount = quests.filter((q) => q.status === 'completed').length
-
-        // Read existing soldiers
-        let soldiers = DEMO_SOLDIERS
-        try {
-          const raw = localStorage.getItem('life-rpg:demo-soldiers')
-          if (raw) soldiers = JSON.parse(raw)
-        } catch {}
+        const soldiers = getDemoSoldiers()
 
         const result = demoCompleteQuest(profile, quest, soldiers, completedCount)
 
@@ -135,34 +153,32 @@ export function useCompleteQuest() {
             : q
         )
         saveDemoQuests(updatedQuests)
-
-        // Persist new soldiers
-        const updatedSoldiers = [...soldiers, ...result.newSoldiers]
-        try { localStorage.setItem('life-rpg:demo-soldiers', JSON.stringify(updatedSoldiers)) } catch {}
+        saveDemoSoldiers([...soldiers, ...result.newSoldiers])
 
         return {
           xp_gained: result.xpGained,
           gold_gained: result.goldGained,
+          stat_gained: quest.discipline,
+          level_before: profile.level,
+          level_after: result.newLevel,
+          rank_before: result.oldRank,
+          rank_after: result.newRank,
           leveled_up: result.leveledUp,
           ranked_up: result.rankedUp,
-          new_level: result.newLevel,
-          new_rank: result.newRank,
-          old_rank: result.oldRank,
-          new_soldiers: result.newSoldiers,
           new_xp: result.newProfile.xp,
-          new_gold: result.newProfile.gold,
-        } as unknown as CompleteQuestResult
+          new_xp_to_next: result.newProfile.xp_to_next,
+          new_soldiers: result.newSoldiers.map((s) => ({ key: s.soldier_key, name: s.soldier_name })),
+        } as CompleteQuestResult
       }
 
       const res = await fetch(`/api/quests/${questId}/complete`, {
         method: 'POST',
       })
+      const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(err.error ?? 'Failed to complete quest')
+        throw new Error(parseError(json, 'Failed to complete quest'))
       }
-      const data = await res.json()
-      return data.result as CompleteQuestResult
+      return unwrap<CompleteQuestResult>(json, 'result')
     },
     onMutate: async (questId) => {
       // Cancel any in-flight refetches
@@ -183,7 +199,7 @@ export function useCompleteQuest() {
 
       return { previousQuests, previousProfile }
     },
-    onError: (err, questId, ctx) => {
+    onError: (_err, _questId, ctx) => {
       // Rollback
       if (ctx?.previousQuests) {
         queryClient.setQueryData(['quests', 'active'], ctx.previousQuests)
@@ -220,6 +236,10 @@ export function useCompleteQuest() {
       // Always refetch to get authoritative server state
       queryClient.invalidateQueries({ queryKey: ['quests'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
+      queryClient.invalidateQueries({ queryKey: ['army'] })
+      queryClient.invalidateQueries({ queryKey: ['completions'] })
+      queryClient.invalidateQueries({ queryKey: ['shop'] })
     },
   })
 }
@@ -238,24 +258,27 @@ export function useDeleteQuest() {
         return
       }
       const res = await fetch(`/api/quests/${questId}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete quest')
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(parseError(json, 'Failed to delete quest'))
     },
     onMutate: async (questId) => {
       await queryClient.cancelQueries({ queryKey: ['quests'] })
       const previousQuests = queryClient.getQueryData<Quest[]>(['quests'])
-      queryClient.setQueriesData({ queryKey: ['quests'] }, (old: any) => {
+      queryClient.setQueriesData({ queryKey: ['quests'] }, (old: unknown) => {
         if (Array.isArray(old)) {
-          return old.filter((q) => q.id !== questId)
+          return (old as Quest[]).filter((q) => q.id !== questId)
         }
         return old
       })
       return { previousQuests }
     },
-    onError: (err, vars, ctx) => {
+    onError: () => {
       queryClient.invalidateQueries({ queryKey: ['quests'] })
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['quests'] })
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
     },
   })
 }
@@ -268,17 +291,24 @@ export function useUpdateQuest() {
 
   return useMutation({
     mutationFn: async ({ id, ...input }: { id: string } & Record<string, unknown>) => {
+      if (isDemoMode()) {
+        const quests = getDemoQuests()
+        const updated = quests.map((q) => (q.id === id ? { ...q, ...input } : q))
+        saveDemoQuests(updated)
+        const found = updated.find((q) => q.id === id)
+        if (!found) throw new Error('Quest not found')
+        return found
+      }
       const res = await fetch(`/api/quests/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
       })
+      const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(err.error ?? 'Failed to update quest')
+        throw new Error(parseError(json, 'Failed to update quest'))
       }
-      const data = await res.json()
-      return data.quest as Quest
+      return unwrap<Quest>(json, 'quest')
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['quests'] })

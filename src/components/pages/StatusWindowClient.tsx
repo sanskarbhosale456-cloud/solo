@@ -91,37 +91,77 @@ export function StatusWindowClient() {
         initial={{ opacity: 0, rotateX: 30, y: 100, scale: 0.8 }}
         animate={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-50 flex flex-col items-center drop-shadow-[0_0_30px_rgba(0,240,255,0.15)]"
+        className="relative z-50 flex flex-col items-center drop-shadow-[0_0_30px_rgba(147,51,234,0.2)]"
         style={{ animation: 'float-hologram 6s ease-in-out infinite' }}
       >
         {/* LIGHTNING FLASH OVERLAYS */}
         <div className="absolute inset-0 z-0 pointer-events-none rounded-sm" style={{ animation: 'lightning-border 4s infinite' }} />
 
         {/* MAIN STATUS PANEL */}
-        <div className="relative w-[98%] bg-black/70 backdrop-blur-xl border border-cyan-500/30 p-8 md:p-12 shadow-[inset_0_0_80px_rgba(0,240,255,0.1)] overflow-hidden rounded-sm group">
+        <div 
+          className="relative w-[98%] border border-purple-500/35 bg-[#060312]/90 backdrop-blur-xl p-8 md:p-12 shadow-[0_0_50px_rgba(139,92,246,0.18),inset_0_0_80px_rgba(147,51,234,0.08)] overflow-hidden rounded-sm group"
+          style={{
+            backgroundImage: 'url(/status-window-bg.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          {/* Dark purple cosmic backing overlay so text & charts remain 100% crisp and readable */}
+          <div className="absolute inset-0 bg-[#05020f]/80 pointer-events-none z-0" />
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-950/20 via-transparent to-cyan-950/20 pointer-events-none z-0" />
+
           {/* Animated Scanline Grid */}
           <div 
-            className="absolute inset-0 opacity-30 pointer-events-none mix-blend-screen" 
+            className="absolute inset-0 opacity-15 pointer-events-none mix-blend-screen z-0" 
             style={{ 
-              backgroundImage: 'linear-gradient(rgba(0,240,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.2) 1px, transparent 1px)', 
-              backgroundSize: '40px 40px',
+              backgroundImage: 'linear-gradient(rgba(0,240,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(147,51,234,0.15) 1px, transparent 1px)', 
+              backgroundSize: '36px 36px',
               animation: 'scanline-scroll 3s linear infinite'
             }} 
           />
 
-          {/* HEADER TITLE */}
-          <div className="relative z-10 flex flex-col items-center mb-12">
+          {/* ORNATE FANTASY HEADER FRAME */}
+          <div className="relative z-10 flex flex-col items-center mb-10">
+            {/* Top Ornamental Wing Bracket */}
+            <div className="w-full max-w-lg flex items-center justify-center gap-2 mb-1.5 opacity-85">
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-purple-500/80 to-cyan-400" />
+              <div className="flex items-center gap-1.5 px-3">
+                <div className="w-2.5 h-2.5 rotate-45 border border-cyan-400 bg-purple-950 shadow-[0_0_8px_#00f0ff]" />
+                <div className="w-2 h-2 rotate-45 bg-purple-400 shadow-[0_0_6px_#a855f7]" />
+                <div className="w-2.5 h-2.5 rotate-45 border border-cyan-400 bg-purple-950 shadow-[0_0_8px_#00f0ff]" />
+              </div>
+              <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-purple-500/80 to-cyan-400" />
+            </div>
+
+            {/* Main Title */}
             <h1 
-              className={`text-cyan-400 font-bold tracking-[0.3em] text-3xl md:text-4xl uppercase transition-all duration-75 ${glitch ? 'scale-105' : ''}`} 
+              className={`text-cyan-400 font-bold tracking-[0.35em] text-3xl md:text-4xl uppercase transition-all duration-75 my-1 ${glitch ? 'scale-105' : ''}`} 
               style={{ 
                 fontFamily: '"Cinzel", serif', 
                 animation: glitch ? 'text-glitch 0.2s linear infinite' : 'none',
-                textShadow: "0 0 15px rgba(0,240,255,0.8)" 
+                textShadow: "0 0 20px rgba(0,240,255,0.8), 0 0 35px rgba(168,85,247,0.4)" 
               }}
             >
               [ STATUS ]
             </h1>
-            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent mt-4 opacity-50 shadow-[0_0_10px_#00f0ff]" />
+
+            {/* Bottom Ornamental Wing Bracket with Purple Rune Spear */}
+            <div className="w-full max-w-xl flex items-center justify-center gap-2 mt-1.5 opacity-85">
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-purple-600 to-purple-400" />
+              <div className="flex items-center gap-2 px-3">
+                <div className="w-1.5 h-1.5 rotate-45 bg-cyan-400 shadow-[0_0_6px_#00f0ff]" />
+                {/* Central Violet Rune Spear */}
+                <div className="relative -my-1">
+                  <svg viewBox="0 0 24 36" className="w-5 h-8 text-purple-400 drop-shadow-[0_0_12px_#a855f7]" fill="currentColor">
+                    <path d="M12 0L19 12L12 36L5 12Z" />
+                    <path d="M12 0L15 12L12 36L9 12Z" fill="#e9d5ff" opacity="0.8" />
+                  </svg>
+                </div>
+                <div className="w-1.5 h-1.5 rotate-45 bg-cyan-400 shadow-[0_0_6px_#00f0ff]" />
+              </div>
+              <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-purple-600 to-purple-400" />
+            </div>
           </div>
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -132,18 +172,18 @@ export function StatusWindowClient() {
               {/* Name & Basic Info */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end border-b border-cyan-500/20 pb-2 group-hover:border-cyan-400/50 transition-colors">
-                  <span className="text-cyan-500/70 font-display tracking-widest text-xs uppercase font-bold">Name</span>
-                  <span className="text-white font-body text-xl tracking-wider text-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{profile.username || 'PLAYER'}</span>
+                  <span className="text-cyan-400 font-display tracking-widest text-xs uppercase font-bold">NAME</span>
+                  <span className="text-white font-body text-xl tracking-wider text-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{profile.username || 'Shadow Hunter'}</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-cyan-500/20 pb-2 group-hover:border-cyan-400/50 transition-colors">
-                  <span className="text-cyan-500/70 font-display tracking-widest text-xs uppercase font-bold">Ability</span>
+                  <span className="text-cyan-400 font-display tracking-widest text-xs uppercase font-bold">ABILITY</span>
                   <span className="text-white font-body text-lg tracking-wider opacity-40">None</span>
                 </div>
               </div>
 
               {/* Level & XP */}
-              <div className="pt-2 space-y-4 bg-cyan-950/20 p-6 border border-cyan-500/10 rounded-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
+              <div className="pt-2 space-y-4 bg-[#0a061c]/90 p-6 border border-cyan-500/25 rounded-sm relative overflow-hidden shadow-[inset_0_0_25px_rgba(0,240,255,0.06)]">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan-500/10 via-transparent to-purple-950/20 pointer-events-none" />
                 <div className="flex justify-between items-end relative z-10">
                   <span className="text-cyan-400 font-display tracking-widest text-sm uppercase font-bold">LEVEL</span>
                   <motion.span 
@@ -156,7 +196,7 @@ export function StatusWindowClient() {
                 </div>
                 
                 {/* Animated Custom XP Bar */}
-                <div className="relative w-full h-1.5 bg-black border border-cyan-900/50 rounded-none overflow-hidden mt-2 z-10">
+                <div className="relative w-full h-2 bg-black/80 border border-cyan-900/60 rounded-none overflow-hidden mt-2 z-10">
                    <motion.div 
                      initial={{ width: 0 }}
                      animate={{ width: `${(profile.xp / profile.xp_to_next) * 100}%` }}
@@ -164,39 +204,56 @@ export function StatusWindowClient() {
                      className="absolute top-0 left-0 h-full bg-cyan-400 shadow-[0_0_15px_#00f0ff]"
                    />
                 </div>
-                <div className="flex justify-between items-center text-cyan-500/50 font-mono text-[10px] tracking-widest uppercase mt-1 relative z-10">
-                  <span>Experience</span>
+                <div className="flex justify-between items-center text-cyan-400/60 font-mono text-[10px] tracking-widest uppercase mt-1 relative z-10">
+                  <span>EXPERIENCE</span>
                   <span>{profile.xp} / {profile.xp_to_next}</span>
                 </div>
               </div>
 
-              {/* Dynamic Animated HP / MP */}
+              {/* Segmented HUD Bars: HP / MP / FATIGUE */}
               <div className="pt-4 space-y-5">
+                {/* 10-Segmented HP Bar */}
                 <div className="flex items-center gap-4">
-                  <span className="text-green-400 font-display font-bold tracking-widest w-12 text-xs">HP</span>
-                  <div className="flex-1 h-3 bg-black/60 border border-green-900/30 overflow-hidden relative">
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_90%,rgba(0,0,0,0.5)_90%)] bg-[size:10%_100%] z-10" />
-                    <motion.div 
-                      initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1, delay: 1 }}
-                      className="h-full bg-green-500 shadow-[0_0_15px_#22c55e] relative z-0" 
-                    />
+                  <span className="text-green-400 font-display font-bold tracking-widest w-16 text-xs">HP</span>
+                  <div className="flex-1 flex gap-1 h-3.5 bg-black/70 border border-green-900/40 p-0.5 overflow-hidden rounded-[1px]">
+                    {[...Array(10)].map((_, idx) => {
+                      const filled = idx < 7
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`flex-1 h-full rounded-[1px] transition-all duration-300 ${
+                            filled ? 'bg-green-500 shadow-[0_0_6px_#22c55e]' : 'bg-green-950/30'
+                          }`}
+                        />
+                      )
+                    })}
                   </div>
                   <span className="text-green-100 font-mono text-xs w-20 text-right">{hp}/{hp}</span>
                 </div>
+
+                {/* 10-Segmented MP Bar */}
                 <div className="flex items-center gap-4">
-                  <span className="text-cyan-400 font-display font-bold tracking-widest w-12 text-xs">MP</span>
-                  <div className="flex-1 h-3 bg-black/60 border border-cyan-900/30 overflow-hidden relative">
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_90%,rgba(0,0,0,0.5)_90%)] bg-[size:10%_100%] z-10" />
-                    <motion.div 
-                      initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1, delay: 1.1 }}
-                      className="h-full bg-cyan-500 shadow-[0_0_15px_#00f0ff] relative z-0" 
-                    />
+                  <span className="text-cyan-400 font-display font-bold tracking-widest w-16 text-xs">MP</span>
+                  <div className="flex-1 flex gap-1 h-3.5 bg-black/70 border border-cyan-900/40 p-0.5 overflow-hidden rounded-[1px]">
+                    {[...Array(10)].map((_, idx) => {
+                      const filled = idx < 6
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`flex-1 h-full rounded-[1px] transition-all duration-300 ${
+                            filled ? 'bg-cyan-400 shadow-[0_0_6px_#00f0ff]' : 'bg-cyan-950/30'
+                          }`}
+                        />
+                      )
+                    })}
                   </div>
                   <span className="text-cyan-100 font-mono text-xs w-20 text-right">{mp}/{mp}</span>
                 </div>
+
+                {/* FATIGUE */}
                 <div className="flex items-center gap-4">
                   <span className="text-orange-500 font-display font-bold tracking-widest w-16 text-xs">FATIGUE</span>
-                  <span className="text-orange-200 font-mono text-xs w-20 drop-shadow-[0_0_5px_#f97316]">0</span>
+                  <span className="text-orange-400 font-mono text-xs font-bold drop-shadow-[0_0_8px_#f97316]">0</span>
                 </div>
               </div>
 
@@ -207,8 +264,8 @@ export function StatusWindowClient() {
               
               {/* Rank Progression Roadmap */}
               <div className="space-y-6">
-                <div className="text-cyan-500/70 font-display tracking-[0.2em] text-[10px] uppercase font-bold border-b border-cyan-500/20 pb-2">
-                  Current Rank
+                <div className="text-cyan-400/80 font-display tracking-[0.2em] text-[10px] uppercase font-bold border-b border-cyan-500/20 pb-2">
+                  CURRENT RANK
                 </div>
                 <div className="flex justify-between items-center relative px-2 pt-2">
                   <motion.div 
@@ -225,12 +282,12 @@ export function StatusWindowClient() {
                         key={r} className="relative z-10 flex flex-col items-center"
                       >
                         <div className={`w-8 h-8 rotate-45 border flex items-center justify-center transition-all duration-500
-                          ${isCurrent ? 'bg-cyan-950 border-cyan-400 shadow-[0_0_20px_#00f0ff] scale-125' 
-                          : isAchieved ? 'bg-black border-cyan-700/50' 
-                          : 'bg-black border-cyan-900/20 opacity-30'}
+                          ${isCurrent ? 'bg-cyan-950/90 border-2 border-cyan-400 shadow-[0_0_20px_#00f0ff] scale-125' 
+                          : isAchieved ? 'bg-black/80 border-cyan-700/50' 
+                          : 'bg-black/80 border-cyan-900/20 opacity-30'}
                         `}>
                           <span className={`-rotate-45 font-display text-xs font-bold
-                            ${isCurrent ? 'text-cyan-300 drop-shadow-[0_0_5px_#00f0ff]' 
+                            ${isCurrent ? 'text-cyan-300 drop-shadow-[0_0_6px_#00f0ff]' 
                             : isAchieved ? 'text-cyan-600' 
                             : 'text-cyan-900'}
                           `}>
@@ -244,12 +301,12 @@ export function StatusWindowClient() {
               </div>
 
               {/* Attributes Radar Web Chart */}
-              <div className="bg-cyan-950/10 p-6 border border-cyan-500/10 rounded-sm relative overflow-hidden flex flex-col items-center">
+              <div className="bg-[#0a061c]/70 p-6 border border-cyan-500/15 rounded-sm relative overflow-hidden flex flex-col items-center shadow-[inset_0_0_20px_rgba(147,51,234,0.06)]">
                 {/* Sweep animation overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent h-[200%] -top-[100%] animate-[scanline-scroll_4s_linear_infinite]" />
                 
-                <div className="w-full text-cyan-500/70 font-display tracking-[0.2em] text-[10px] uppercase mb-2 font-bold relative z-10 text-left">
-                  Attributes
+                <div className="w-full text-cyan-400/80 font-display tracking-[0.2em] text-[10px] uppercase mb-2 font-bold relative z-10 text-left">
+                  ATTRIBUTES
                 </div>
                 
                 <div className="relative z-10 w-full flex items-center justify-center">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, Component, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
@@ -61,18 +61,81 @@ export function ElectricSparks({ opacity = 1 }: { opacity?: number }) {
   )
 }
 
-function GateModel() {
-  const { scene } = useGLTF('/gate.glb')
+function ProceduralGate() {
+  const groupRef = useRef<THREE.Group>(null!)
+  const ring1Ref = useRef<THREE.Mesh>(null!)
+  const ring2Ref = useRef<THREE.Mesh>(null!)
+  
+  useFrame((_, delta) => {
+    if (ring1Ref.current) ring1Ref.current.rotation.z += delta * 0.4
+    if (ring2Ref.current) ring2Ref.current.rotation.z -= delta * 0.6
+  })
+
   return (
-    <primitive 
-      object={scene} 
-      position={[0, -1, 0]} 
-      scale={4.5} 
-    />
+    <group ref={groupRef} position={[0, -1, 0]}>
+      {/* Rotating Outer Gate Arch */}
+      <mesh ref={ring1Ref} position={[0, 3, 0]}>
+        <torusGeometry args={[4, 0.25, 16, 64]} />
+        <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={2.5} wireframe />
+      </mesh>
+
+      {/* Rotating Inner Mana Ring */}
+      <mesh ref={ring2Ref} position={[0, 3, 0]}>
+        <torusGeometry args={[3.5, 0.1, 16, 64]} />
+        <meshStandardMaterial color="#a855f7" emissive="#a855f7" emissiveIntensity={3} />
+      </mesh>
+
+      {/* Portal Energy Disc */}
+      <mesh position={[0, 3, 0]}>
+        <circleGeometry args={[3.4, 32]} />
+        <meshBasicMaterial color="#00d8ff" opacity={0.35} transparent side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Left Monolith Pillar */}
+      <mesh position={[-4.5, 2.5, 0]}>
+        <boxGeometry args={[0.8, 8, 0.8]} />
+        <meshStandardMaterial color="#0a1020" emissive="#0055ff" emissiveIntensity={0.6} />
+      </mesh>
+
+      {/* Right Monolith Pillar */}
+      <mesh position={[4.5, 2.5, 0]}>
+        <boxGeometry args={[0.8, 8, 0.8]} />
+        <meshStandardMaterial color="#0a1020" emissive="#0055ff" emissiveIntensity={0.6} />
+      </mesh>
+    </group>
   )
 }
 
-useGLTF.preload('/gate.glb')
+class GateErrorBoundary extends Component<{ fallback: React.ReactNode; children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(err: any) {
+    console.warn('GLTF gate model fallback activated:', err)
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback
+    return this.props.children
+  }
+}
+
+function SafeGLTFGate() {
+  const { scene } = useGLTF('/gate.glb')
+  return <primitive object={scene} position={[0, -1, 0]} scale={4.5} />
+}
+
+function GateModel() {
+  return (
+    <GateErrorBoundary fallback={<ProceduralGate />}>
+      <SafeGLTFGate />
+    </GateErrorBoundary>
+  )
+}
+
+try {
+  useGLTF.preload('/gate.glb')
+} catch {}
 
 export function AwakeningGate({ onComplete }: AwakeningGateProps) {
   const [showText, setShowText] = useState(true)

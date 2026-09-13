@@ -26,6 +26,14 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
+      // Clear any stale demo session before real login
+      try {
+        if (localStorage.getItem('life-rpg:demo-mode') === 'true') {
+          const { exitDemoMode } = await import('@/lib/demo/demoMode')
+          exitDemoMode()
+          await fetch('/api/demo', { method: 'DELETE' })
+        }
+      } catch {}
       const supabase = getSupabaseBrowserClient()
       const { error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -63,8 +71,17 @@ export default function LoginPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 1.5 }}
       id="main-content"
-      className="min-h-screen bg-black flex items-center justify-center px-4 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
+      style={{
+        backgroundImage: 'url(/login-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+      }}
     >
+      {/* Dark overlay to preserve login UI contrast */}
+      <div className="absolute inset-0 bg-black/55 z-0 pointer-events-none" />
+
       {/* Electric Sparks Background (dimmed) */}
       <ElectricSparks opacity={0.4} />
 
@@ -161,11 +178,16 @@ function DemoButton() {
   async function handleDemo() {
     setLoading(true)
     try {
+      // Sign out any stale Supabase session first so demo is clean
+      try {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase/client')
+        await getSupabaseBrowserClient().auth.signOut()
+      } catch {}
       const { enterDemoMode } = await import('@/lib/demo/demoMode')
       enterDemoMode()
       await fetch('/api/demo', { method: 'POST' })
-      router.push('/dashboard')
-      router.refresh()
+      // Hard navigation ensures the demo cookie is sent on the next request
+      window.location.href = '/dashboard'
     } catch {
       setLoading(false)
     }

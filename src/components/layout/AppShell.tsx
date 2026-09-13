@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -84,15 +85,17 @@ export function AppShell({ children }: AppShellProps) {
         const { exitDemoMode } = await import('@/lib/demo/demoMode')
         exitDemoMode()
         await fetch('/api/demo', { method: 'DELETE' })
-        router.push('/login')
-        router.refresh()
+        window.location.href = '/login'
         return
       }
 
       const supabase = getSupabaseBrowserClient()
       await supabase.auth.signOut()
-      router.push('/login')
-      router.refresh()
+      // Also clear server cookies + demo cookie via API for reliability
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' })
+      } catch {}
+      window.location.href = '/login'
     } catch {
       setSigningOut(false)
     }
@@ -103,37 +106,62 @@ export function AppShell({ children }: AppShellProps) {
       {/* Sidebar — desktop */}
       <nav
         aria-label="Main navigation"
-        className="hidden md:flex flex-col w-64 border-r-2 border-blue-500/50 bg-[#030914]/80 backdrop-blur-xl flex-shrink-0 relative shadow-[5px_0_30px_rgba(37,99,235,0.15)] z-20"
+        className="hidden md:flex flex-col w-64 border-r border-cyan-500/30 bg-[#070414] flex-shrink-0 relative shadow-[5px_0_30px_rgba(139,92,246,0.25)] z-20 overflow-hidden"
+        style={{
+          backgroundImage: 'url(/sidebar-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'left top',
+          backgroundRepeat: 'no-repeat',
+        }}
       >
+        {/* Dark transparent gradient overlay for optimal readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#060411]/50 via-[#060411]/35 to-[#060411]/70 pointer-events-none z-0" />
+        {/* Subtle cosmic vignette */}
+        <div className="absolute inset-0 bg-black/25 pointer-events-none z-0" />
         {/* Faint tech grid in sidebar */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(59,130,246,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.2) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <div 
+          className="absolute inset-0 opacity-15 pointer-events-none z-0" 
+          style={{ 
+            backgroundImage: 'linear-gradient(rgba(147,51,234,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.2) 1px, transparent 1px)', 
+            backgroundSize: '24px 24px' 
+          }} 
+        />
 
         {/* Logo */}
-        <div className="px-6 py-6 border-b border-blue-500/30 relative shadow-[0_5px_15px_rgba(59,130,246,0.1)]">
-          {/* Logo removed by user request */}
+        <div className="px-3.5 py-3 border-b border-cyan-500/25 relative z-10 bg-[#060411]/50 backdrop-blur-sm shadow-[0_5px_15px_rgba(0,240,255,0.08)]">
+          <Link href="/dashboard" className="block relative w-full h-[76px] group" aria-label="Life RPG — System Interface">
+            <Image
+              src="/life-rpg-logo-cropped.png"
+              alt="Life RPG — System Interface"
+              fill
+              unoptimized
+              priority
+              className="object-contain object-left transition-transform duration-200 group-hover:scale-[1.02]"
+            />
+          </Link>
         </div>
 
         {/* Nav links */}
-        <ul className="flex-1 px-4 py-6 space-y-2 relative" role="list">
+        <ul className="flex-1 px-3 py-6 space-y-2 relative z-10" role="list">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-display tracking-widest transition-all duration-150 group uppercase
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-display tracking-widest transition-all duration-150 group uppercase rounded-sm
                     ${active
-                      ? 'bg-blue-500/10 border-l-2 border-blue-400 text-blue-200 shadow-[inset_15px_0_20px_-15px_rgba(59,130,246,0.3)]'
-                      : 'text-blue-100/40 hover:text-blue-200 hover:bg-blue-500/5 border-l-2 border-transparent'
+                      ? 'bg-cyan-500/15 border-l-2 border-cyan-400 text-cyan-200 shadow-[inset_15px_0_20px_-15px_rgba(0,240,255,0.4)] backdrop-blur-sm'
+                      : 'text-blue-100/60 hover:text-white hover:bg-purple-950/30 hover:border-l-2 hover:border-purple-400/50 border-l-2 border-transparent'
                     }`}
                   aria-current={active ? 'page' : undefined}
                 >
-                  <span className={`flex-shrink-0 transition-colors ${active ? 'text-glow-sky' : 'text-white/30 group-hover:text-white/60'}`}>
+                  <span className={`flex-shrink-0 transition-colors ${active ? 'text-cyan-300 drop-shadow-[0_0_8px_#00f0ff]' : 'text-white/40 group-hover:text-white/80'}`}>
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
                   {active && (
-                    <span className="ml-auto w-1 h-4 bg-glow rounded-full" aria-hidden="true" />
+                    <span className="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_8px_#00f0ff]" aria-hidden="true" />
                   )}
                 </Link>
               </li>
@@ -141,34 +169,54 @@ export function AppShell({ children }: AppShellProps) {
           })}
         </ul>
 
-        {/* Sign out */}
-        <div className="px-3 py-4 border-t border-glow/10">
-          <button
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="flex items-center gap-3 px-3 py-2.5 w-full rounded text-sm text-white/40 hover:text-danger hover:bg-danger/10 border border-transparent hover:border-danger/20 transition-all duration-150 font-body"
-            aria-label="Sign out"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            {signingOut ? 'Signing out...' : 'Sign Out'}
-          </button>
+        {/* Sign out with Hunter Avatar */}
+        <div className="px-4 py-4 border-t border-purple-500/20 relative z-10 bg-[#060411]/50 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-full border border-cyan-400/60 bg-purple-950/80 flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.4)] flex-shrink-0">
+              <span className="font-display font-bold text-cyan-300 text-xs">N</span>
+            </div>
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="text-sm text-white/50 hover:text-cyan-300 transition-colors font-body tracking-wider"
+              aria-label="Sign out"
+            >
+              {signingOut ? 'Signing out...' : 'Sign Out'}
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-glow/10 bg-void-surface">
-          <span className="font-display text-sm text-glow-sky tracking-widest"></span>
+        <header 
+          className="md:hidden flex items-center justify-between px-4 py-3 border-b border-purple-500/30 bg-[#070414] relative shadow-[0_5px_20px_rgba(139,92,246,0.2)]"
+          style={{
+            backgroundImage: 'url(/sidebar-bg.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60 pointer-events-none z-0" />
+          <div className="flex items-center relative z-10">
+            <Link href="/dashboard" className="block relative w-36 h-9" aria-label="Life RPG — System Interface">
+              <Image
+                src="/life-rpg-logo-cropped.png"
+                alt="Life RPG — System Interface"
+                fill
+                unoptimized
+                priority
+                className="object-contain object-left"
+              />
+            </Link>
+          </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav"
-            className="text-white/50 hover:text-white p-1.5 rounded transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-glow"
+            className="text-white/70 hover:text-white p-1.5 rounded transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-glow relative z-10"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {mobileMenuOpen
@@ -184,7 +232,7 @@ export function AppShell({ children }: AppShellProps) {
           <nav
             id="mobile-nav"
             aria-label="Mobile navigation"
-            className="md:hidden bg-[#030914]/90 backdrop-blur-xl border-b-2 border-blue-500/50 px-3 py-2 shadow-[0_5px_20px_rgba(37,99,235,0.2)]"
+            className="md:hidden bg-[#070414]/95 backdrop-blur-xl border-b-2 border-cyan-500/40 px-3 py-2 shadow-[0_5px_20px_rgba(139,92,246,0.3)] relative z-30"
           >
             <ul className="space-y-1" role="list">
               {NAV_ITEMS.map((item) => {
@@ -195,7 +243,7 @@ export function AppShell({ children }: AppShellProps) {
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded text-sm font-display tracking-widest uppercase transition-all
-                        ${active ? 'bg-blue-500/10 text-glow-sky border-l-2 border-blue-400' : 'text-blue-100/60 hover:text-blue-100 border-l-2 border-transparent'}`}
+                        ${active ? 'bg-cyan-500/15 text-cyan-300 border-l-2 border-cyan-400 shadow-[inset_10px_0_15px_-10px_rgba(0,240,255,0.4)]' : 'text-blue-100/60 hover:text-blue-100 border-l-2 border-transparent'}`}
                       aria-current={active ? 'page' : undefined}
                     >
                       <span aria-hidden="true">{item.icon}</span>
@@ -217,7 +265,7 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile bottom nav */}
       <nav
         aria-label="Bottom navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-[#030914]/90 backdrop-blur-xl border-t-2 border-blue-500/50 z-40 shadow-[0_-5px_20px_rgba(37,99,235,0.2)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-[#070414]/90 backdrop-blur-xl border-t border-cyan-500/30 z-40 shadow-[0_-5px_20px_rgba(139,92,246,0.3)]"
       >
         <ul className="flex items-center justify-around py-2" role="list">
           {NAV_ITEMS.map((item) => {
@@ -227,7 +275,7 @@ export function AppShell({ children }: AppShellProps) {
                 <Link
                   href={item.href}
                   className={`flex flex-col items-center gap-1 px-3 py-1.5 transition-colors
-                    ${active ? 'text-glow-sky drop-shadow-[0_0_8px_#38bdf8]' : 'text-blue-100/40 hover:text-blue-100/70'}`}
+                    ${active ? 'text-cyan-300 drop-shadow-[0_0_8px_#00f0ff]' : 'text-blue-100/40 hover:text-blue-100/70'}`}
                   aria-label={item.label}
                   aria-current={active ? 'page' : undefined}
                 >

@@ -3,13 +3,17 @@
  *
  * A fully interactive demo that runs entirely in localStorage.
  * No Supabase required. All game logic mirrors the real server logic.
+ * Demo data NEVER touches Supabase — it cannot read or modify real user data.
  */
 
 import type { UserProfile, Quest, ShadowSoldier } from '@/types'
+import { SHADOW_SOLDIERS } from '@/lib/progression/engine'
 
 export const DEMO_STORAGE_KEY = 'life-rpg:demo-mode'
 export const DEMO_PROFILE_KEY = 'life-rpg:demo-profile'
 export const DEMO_QUESTS_KEY = 'life-rpg:demo-quests'
+export const DEMO_SOLDIERS_KEY = 'life-rpg:demo-soldiers'
+export const DEMO_PURCHASES_KEY = 'life-rpg:demo-purchases'
 
 // ── Initial demo profile ────────────────────────────────────────
 export const INITIAL_DEMO_PROFILE: UserProfile = {
@@ -23,6 +27,7 @@ export const INITIAL_DEMO_PROFILE: UserProfile = {
   gold: 480,
   mana_crystals: 120,
   streak: 3,
+  last_active: new Date().toISOString().slice(0, 10),
   stat_int: 14,
   stat_str: 11,
   stat_agi: 9,
@@ -30,7 +35,6 @@ export const INITIAL_DEMO_PROFILE: UserProfile = {
   stat_per: 8,
   equipped_frame: null,
   equipped_theme: 'void',
-  last_active: new Date().toISOString(),
   created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
 }
 
@@ -38,14 +42,21 @@ export const INITIAL_DEMO_PROFILE: UserProfile = {
 // Empty by default — users assign their own quests
 export const INITIAL_DEMO_QUESTS: Quest[] = []
 
-// ── Demo shadow soldiers ────────────────────────────────────────
+// ── Demo shadow soldiers (keys match SHADOW_SOLDIERS catalog) ──
 export const DEMO_SOLDIERS: ShadowSoldier[] = [
-  { id: 'ds-1', user_id: 'demo-user', soldier_key: 'soldier_01', soldier_name: 'Shadow Infantry', skin: 'default', unlocked_at: new Date(Date.now() - 6*86400000).toISOString() },
+  {
+    id: 'ds-1',
+    user_id: 'demo-user',
+    soldier_key: 'initiate',
+    soldier_name: 'The Initiate',
+    skin: 'default',
+    unlocked_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+  },
 ]
 
 // ── XP / level logic (mirrors server engine) ───────────────────
 export function calcXpToNext(level: number): number {
-  return Math.round(100 * Math.pow(level, 1.8) / 10) * 10
+  return Math.max(100, Math.round((100 * Math.pow(level, 1.8)) / 10) * 10)
 }
 
 export function calcRank(level: number): UserProfile['rank'] {
@@ -82,7 +93,7 @@ export function demoCompleteQuest(
   let newLevel = profile.level
   let xpToNext = profile.xp_to_next
 
-  // Level-up loop
+  // Level-up loop (mirrors SQL function)
   while (newXp >= xpToNext) {
     newXp -= xpToNext
     newLevel++
@@ -93,24 +104,34 @@ export function demoCompleteQuest(
   const leveledUp = newLevel > oldLevel
   const rankedUp = newRank !== oldRank
 
-  // Shadow soldier unlock logic: 1 at quest 1, then every 5
+  // Shadow soldier unlock logic — mirrors SQL: unlock at completion #1,
+  // then every 5 completions up to 100 (keys from SHADOW_SOLDIERS catalog)
   const newSoldiers: ShadowSoldier[] = []
   const newCompletedCount = completedCount + 1
-  const shouldUnlock =
-    newCompletedCount === 1 ||
-    (newCompletedCount > 1 && (newCompletedCount - 1) % 5 === 0)
-
-  if (shouldUnlock && allSoldiers.length < 21) {
-    const soldierKey = `soldier_${String(allSoldiers.length + 1).padStart(2, '0')}`
+  const unlockedKeys = new Set(allSoldiers.map((s) => s.soldier_key))
+  const milestone = SHADOW_SOLDIERS.find((s) => s.unlockAt === newCompletedCount)
+  if (milestone && !unlockedKeys.has(milestone.key)) {
     newSoldiers.push({
       id: `ds-${Date.now()}`,
       user_id: 'demo-user',
-      soldier_key: soldierKey,
-      soldier_name: `Shadow Knight ${allSoldiers.length + 1}`,
+      soldier_key: milestone.key,
+      soldier_name: milestone.name,
       skin: 'default',
       unlocked_at: new Date().toISOString(),
     })
   }
+
+  // Stat gain by discipline
+  const statCol =
+    quest.discipline === 'intellect'
+      ? 'stat_int'
+      : quest.discipline === 'strength'
+        ? 'stat_str'
+        : quest.discipline === 'agility'
+          ? 'stat_agi'
+          : quest.discipline === 'vitality'
+            ? 'stat_vit'
+            : 'stat_per'
 
   const newProfile: UserProfile = {
     ...profile,
@@ -119,8 +140,10 @@ export function demoCompleteQuest(
     level: newLevel,
     rank: newRank,
     gold: profile.gold + quest.gold_reward,
-    last_active: new Date().toISOString(),
-  }
+    streak: profile.streak + (newCompletedCount === 1 ? 0 : 0) || profile.streak,
+    last_active: new Date().toISOString().slice(0, 10),
+    [statCol]: ((profile as unknown as Record<string, number>)[statCol] ?? 0) + 1,
+  } as UserProfile
 
   return {
     newProfile,
@@ -138,14 +161,26 @@ export function demoCompleteQuest(
 // ── localStorage helpers ────────────────────────────────────────
 export function isDemoMode(): boolean {
   if (typeof window === 'undefined') return false
-  try { return localStorage.getItem(DEMO_STORAGE_KEY) === 'true' } catch { return false }
+  try {
+    return localStorage.getItem(DEMO_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
 }
 
 export function enterDemoMode() {
   try {
     localStorage.setItem(DEMO_STORAGE_KEY, 'true')
-    localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(INITIAL_DEMO_PROFILE))
-    localStorage.setItem(DEMO_QUESTS_KEY, JSON.stringify(INITIAL_DEMO_QUESTS))
+    // Only seed if missing — preserve returning demo progress within 24h cookie window
+    if (!localStorage.getItem(DEMO_PROFILE_KEY)) {
+      localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(INITIAL_DEMO_PROFILE))
+    }
+    if (!localStorage.getItem(DEMO_QUESTS_KEY)) {
+      localStorage.setItem(DEMO_QUESTS_KEY, JSON.stringify(INITIAL_DEMO_QUESTS))
+    }
+    if (!localStorage.getItem(DEMO_SOLDIERS_KEY)) {
+      localStorage.setItem(DEMO_SOLDIERS_KEY, JSON.stringify(DEMO_SOLDIERS))
+    }
   } catch {}
 }
 
@@ -154,27 +189,67 @@ export function exitDemoMode() {
     localStorage.removeItem(DEMO_STORAGE_KEY)
     localStorage.removeItem(DEMO_PROFILE_KEY)
     localStorage.removeItem(DEMO_QUESTS_KEY)
+    localStorage.removeItem(DEMO_SOLDIERS_KEY)
+    localStorage.removeItem(DEMO_PURCHASES_KEY)
   } catch {}
 }
 
 export function getDemoProfile(): UserProfile {
   try {
     const raw = localStorage.getItem(DEMO_PROFILE_KEY)
-    return raw ? JSON.parse(raw) : INITIAL_DEMO_PROFILE
-  } catch { return INITIAL_DEMO_PROFILE }
+    return raw ? (JSON.parse(raw) as UserProfile) : INITIAL_DEMO_PROFILE
+  } catch {
+    return INITIAL_DEMO_PROFILE
+  }
 }
 
 export function getDemoQuests(): Quest[] {
   try {
     const raw = localStorage.getItem(DEMO_QUESTS_KEY)
-    return raw ? JSON.parse(raw) : INITIAL_DEMO_QUESTS
-  } catch { return INITIAL_DEMO_QUESTS }
+    return raw ? (JSON.parse(raw) as Quest[]) : INITIAL_DEMO_QUESTS
+  } catch {
+    return INITIAL_DEMO_QUESTS
+  }
+}
+
+export function getDemoSoldiers(): ShadowSoldier[] {
+  try {
+    const raw = localStorage.getItem(DEMO_SOLDIERS_KEY)
+    return raw ? (JSON.parse(raw) as ShadowSoldier[]) : DEMO_SOLDIERS
+  } catch {
+    return DEMO_SOLDIERS
+  }
+}
+
+export function getDemoPurchases(): string[] {
+  try {
+    const raw = localStorage.getItem(DEMO_PURCHASES_KEY)
+    return raw ? (JSON.parse(raw) as string[]) : []
+  } catch {
+    return []
+  }
 }
 
 export function saveDemoProfile(profile: UserProfile) {
-  try { localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(profile)) } catch {}
+  try {
+    localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(profile))
+  } catch {}
 }
 
 export function saveDemoQuests(quests: Quest[]) {
-  try { localStorage.setItem(DEMO_QUESTS_KEY, JSON.stringify(quests)) } catch {}
+  try {
+    localStorage.setItem(DEMO_QUESTS_KEY, JSON.stringify(quests))
+  } catch {}
+}
+
+export function saveDemoSoldiers(soldiers: ShadowSoldier[]) {
+  try {
+    localStorage.setItem(DEMO_SOLDIERS_KEY, JSON.stringify(soldiers))
+  } catch {}
+}
+
+export function saveDemoPurchases(keys: string[]) {
+  try {
+    localStorage.setItem(DEMO_PURCHASES_KEY, JSON.stringify(keys))
+  } catch {}
 }

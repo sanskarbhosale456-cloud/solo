@@ -32,8 +32,16 @@ export default function SignupPage() {
 
     setLoading(true)
     try {
+      // Clear any stale demo session before real registration
+      try {
+        if (localStorage.getItem('life-rpg:demo-mode') === 'true') {
+          const { exitDemoMode } = await import('@/lib/demo/demoMode')
+          exitDemoMode()
+          await fetch('/api/demo', { method: 'DELETE' })
+        }
+      } catch {}
       const supabase = getSupabaseBrowserClient()
-      const { error: signupError } = await supabase.auth.signUp({
+      const { data, error: signupError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
@@ -46,9 +54,25 @@ export default function SignupPage() {
         return
       }
 
+      // If no session, email confirmation is required — try immediate sign-in
+      // (works when "Confirm email" is disabled in Supabase Auth settings).
+      if (!data.session) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        })
+        if (signInError || !signInData.session) {
+          setSuccess(true)
+          setError(
+            'Account created. Check your email to confirm, then log in. (Or disable "Confirm email" in Supabase Auth settings for instant access.)'
+          )
+          return
+        }
+      }
+
       setSuccess(true)
-      // Navigate immediately — Supabase may require email confirm
-      setTimeout(() => router.push('/dashboard'), 1500)
+      router.push('/dashboard')
+      router.refresh()
     } catch {
       setError('System anomaly detected. Please try again.')
     } finally {

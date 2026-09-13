@@ -9,8 +9,13 @@ export const metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 relative">
-      <ParticleFieldLazy count={200} color="#3B82F6" className="opacity-30" />
+    <div className="-m-4 md:-m-8 min-h-[calc(100vh-4rem)] md:min-h-screen relative p-4 md:p-8 lg:p-12 pb-24 md:pb-12 bg-[#04020a] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#170a2e]/60 via-[#0a0518]/80 to-[#04020a] overflow-hidden">
+      {/* Ambient purple & cyan particle field */}
+      <ParticleFieldLazy count={220} color="#a855f7" className="opacity-40" />
+      {/* Subtle purple cosmic nebula glow */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-900/15 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-950/20 rounded-full blur-3xl pointer-events-none z-0" />
+      
       <div className="relative z-10">
         <Suspense fallback={<StatusWindowSkeleton />}>
           <StatusWindowClient />
