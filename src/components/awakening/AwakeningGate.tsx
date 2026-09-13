@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+import { getAudioManager } from '@/lib/audio/AudioManager'
 
 interface AwakeningGateProps {
   onComplete: () => void
@@ -147,10 +148,20 @@ export function AwakeningGate({ onComplete }: AwakeningGateProps) {
   }, [])
 
   const handleEnterClick = () => {
+    try {
+      getAudioManager().playEntrance()
+    } catch {
+      try {
+        const audio = new Audio('/audio/soundForEntrance.mp3')
+        audio.volume = 0.85
+        audio.play().catch(() => {})
+      } catch {}
+    }
+
     setIsEntering(true)
     setTimeout(() => {
       onComplete()
-    }, 1500)
+    }, 1800)
   }
 
   return (
@@ -225,8 +236,9 @@ export function AwakeningGate({ onComplete }: AwakeningGateProps) {
                   <button 
                     onClick={handleEnterClick}
                     className="btn-lightning px-14 py-4 uppercase tracking-[0.4em] font-bold text-xl transition-all duration-300 cursor-pointer rounded-sm"
+                    aria-label="Start Awakening"
                   >
-                    ENTER
+                    START
                   </button>
                 </motion.div>
               )}

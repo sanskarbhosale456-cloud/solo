@@ -12,7 +12,7 @@
 import { Howl, Howler } from 'howler'
 
 type AmbientPage = 'status' | 'quests' | 'shop' | 'gate'
-type SFXName = 'complete' | 'levelup' | 'rankup' | 'click'
+type SFXName = 'complete' | 'levelup' | 'rankup' | 'click' | 'entrance'
 
 const VOLUME_KEY = 'life-rpg:volume'
 const MUTED_KEY = 'life-rpg:muted'
@@ -29,6 +29,7 @@ const SFX_SRCS: Record<SFXName, string> = {
   levelup: '/audio/sfx-levelup.wav',
   rankup: '/audio/sfx-rankup.wav',
   click: '/audio/sfx-click.wav',
+  entrance: '/audio/soundForEntrance.mp3',
 }
 
 class AudioManagerClass {
@@ -112,6 +113,23 @@ class AudioManagerClass {
       this.sfxCache.set(name, sfx)
     }
     sfx.play()
+  }
+
+  /** Play the entrance awakening audio */
+  playEntrance() {
+    this.unlock()
+    try {
+      const sound = new Howl({
+        src: ['/audio/soundForEntrance.mp3', '/audio/soundForEntrance.mpeg'],
+        volume: this.muted ? 0 : Math.max(0.75, this.volume * 2.5),
+        html5: true,
+      })
+      sound.play()
+      return sound
+    } catch (e) {
+      console.warn('Could not play entrance audio:', e)
+      return null
+    }
   }
 
   setVolume(v: number) {
