@@ -28,7 +28,7 @@ const SFX_SRCS: Record<SFXName, string> = {
   complete: '/audio/sfx-complete.wav',
   levelup: '/audio/sfx-levelup.wav',
   rankup: '/audio/sfx-rankup.wav',
-  click: '/audio/sfx-click.wav',
+  click: '/audio/globalClick.mp3',
   entrance: '/audio/soundForEntrance.mp3',
   loginSuccess: '/audio/soundForLoginSuccess.mpeg',
   websiteIntro: '/audio/websiteIntro.mp3',
@@ -116,6 +116,32 @@ class AudioManagerClass {
       this.sfxCache.set(name, sfx)
     }
     sfx.play()
+  }
+
+  /** Play subtle global click SFX on interactive element interaction */
+  playClick() {
+    this.unlock()
+    if (this.muted) return
+
+    try {
+      let sfx = this.sfxCache.get('click')
+      if (!sfx) {
+        sfx = new Howl({
+          src: ['/audio/globalClick.mp3', '/audio/globalClick.mpeg'],
+          volume: Math.min(0.35, Math.max(0.18, this.volume * 0.8)),
+          html5: false, // Instant <5ms low-latency multi-shot playback
+          onloaderror: () => {},
+        })
+        this.sfxCache.set('click', sfx)
+      }
+      sfx.play()
+    } catch {
+      try {
+        const audio = new Audio('/audio/globalClick.mp3')
+        audio.volume = 0.25
+        audio.play().catch(() => {})
+      } catch {}
+    }
   }
 
   /** Play the entrance awakening audio */

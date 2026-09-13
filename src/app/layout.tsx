@@ -4,6 +4,7 @@ import './globals.css'
 import { QueryProvider } from '@/lib/query-provider'
 import { GameEventsProvider } from '@/hooks/useGameEvents'
 import { Toaster } from '@/components/ui/Toaster'
+import { GlobalClickSound } from '@/components/audio/GlobalClickSound'
 
 const orbitron = Orbitron({
   subsets: ['latin'],
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <GameEventsProvider>
             {children}
             <Toaster />
+            <GlobalClickSound />
           </GameEventsProvider>
         </QueryProvider>
       </body>
