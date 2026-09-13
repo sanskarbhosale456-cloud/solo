@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef } from 'react'
 import { getAudioManager } from '@/lib/audio/AudioManager'
@@ -6,27 +6,27 @@ import { getAudioManager } from '@/lib/audio/AudioManager'
 const INTERACTIVE_SELECTORS = [
   'button',
   'a[href]',
-  'input:not([type=hidden])',
+  'input:not([type="hidden"])',
   'select',
   'textarea',
   'label',
   'summary',
-  '[role=button]',
-  '[role=link]',
-  '[role=tab]',
-  '[role=menuitem]',
-  '[role=menuitemcheckbox]',
-  '[role=menuitemradio]',
-  '[role=checkbox]',
-  '[role=switch]',
-  '[role=radio]',
-  '[role=option]',
-  '[role=combobox]',
-  '[tabindex]:not([tabindex=-1])',
-  '[data-clickable=true]',
+  '[role="button"]',
+  '[role="link"]',
+  '[role="tab"]',
+  '[role="menuitem"]',
+  '[role="menuitemcheckbox"]',
+  '[role="menuitemradio"]',
+  '[role="checkbox"]',
+  '[role="switch"]',
+  '[role="radio"]',
+  '[role="option"]',
+  '[role="combobox"]',
+  '[tabindex]:not([tabindex="-1"])',
+  '[data-clickable="true"]',
   '.clickable',
   '.cursor-pointer',
-].join(',')
+].join(', ')
 
 /**
  * GlobalClickSound
@@ -45,11 +45,21 @@ export function GlobalClickSound() {
         return
       }
 
-      const target = e.target as HTMLElement | null
-      if (!target) return
+      // Ensure target is a valid DOM Element
+      if (!e.target || !(e.target instanceof Element)) {
+        return
+      }
 
-      // Find the nearest interactive element ancestor
-      const interactiveEl = target.closest(INTERACTIVE_SELECTORS) as HTMLElement | null
+      const target = e.target
+
+      // Find the nearest interactive element ancestor safely
+      let interactiveEl: HTMLElement | null = null
+      try {
+        interactiveEl = target.closest(INTERACTIVE_SELECTORS) as HTMLElement | null
+      } catch {
+        // Safe fallback if closest throws on any unexpected element
+        return
+      }
 
       // Check if target or ancestor has cursor: pointer (for custom interactive components)
       let isInteractive = !!interactiveEl
@@ -65,12 +75,12 @@ export function GlobalClickSound() {
       if (!isInteractive) return
 
       // Do not trigger for disabled elements
-      const activeEl = interactiveEl || target
+      const activeEl = (interactiveEl || target) as HTMLElement
       if (
-        activeEl.hasAttribute('disabled') ||
-        activeEl.getAttribute('aria-disabled') === 'true' ||
-        activeEl.classList.contains('disabled') ||
-        activeEl.classList.contains('pointer-events-none')
+        activeEl.hasAttribute?.('disabled') ||
+        activeEl.getAttribute?.('aria-disabled') === 'true' ||
+        activeEl.classList?.contains('disabled') ||
+        activeEl.classList?.contains('pointer-events-none')
       ) {
         return
       }
