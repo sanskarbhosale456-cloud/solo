@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Orbitron, IBM_Plex_Sans, Rajdhani } from 'next/font/google'
+import { Orbitron, IBM_Plex_Sans, Rajdhani, Cinzel } from 'next/font/google'
 import './globals.css'
 import { QueryProvider } from '@/lib/query-provider'
 import { GameEventsProvider } from '@/hooks/useGameEvents'
@@ -23,6 +23,13 @@ const rajdhani = Rajdhani({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-rajdhani',
+  display: 'swap',
+})
+
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  weight: ['600', '700', '800', '900'],
+  variable: '--font-cinzel',
   display: 'swap',
 })
 
@@ -51,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${orbitron.variable} ${ibmPlexSans.variable} ${rajdhani.variable}`}
+      className={`${orbitron.variable} ${ibmPlexSans.variable} ${rajdhani.variable} ${cinzel.variable}`}
     >
       <body className="bg-void text-white font-body antialiased">
         <a
